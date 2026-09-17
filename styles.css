@@ -23,6 +23,8 @@
     --text-secondary: #4E617E;
     --white: #FFFFFF;
     --ink: #0A1B34;
+    --border-light: #E2E5EA;
+    --text-muted: #919DAF;
 
     /* Typography scale — shared across every page so H1/H2/H3 stay consistent. */
     --h1-size: clamp(2.25rem, 4vw, 3.5rem);
@@ -121,6 +123,102 @@ body.intro-active {
     min-height: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
+}
+
+/* Homepage announcement banner. Sits above the fixed header, so the header
+   and page content shift down by its height. Scoped to body.has-top-banner
+   because the markup only exists on the homepage. */
+body.has-top-banner {
+    --top-banner-height: 40px;
+    padding-top: var(--top-banner-height);
+}
+
+.top-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1001;
+    box-sizing: border-box;
+    height: var(--top-banner-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 20px;
+    background: #fff;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+.top-banner:hover {
+    background: var(--cream-dark);
+}
+
+.top-banner-marks {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.top-banner-mark {
+    display: block;
+    flex-shrink: 0;
+}
+
+.top-banner-mark--breez {
+    width: 20px;
+    height: 20px;
+    transform: rotate(-8deg);
+}
+
+.top-banner-mark--everyaisle {
+    width: 23px;
+    height: 20px;
+    transform: rotate(8deg);
+}
+
+.top-banner-arrow {
+    display: block;
+    width: 16px;
+    height: 8px;
+    flex-shrink: 0;
+}
+
+.top-banner-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 18px;
+    color: #102A50;
+}
+
+body.has-top-banner .header {
+    top: var(--top-banner-height);
+}
+
+@media (max-width: 600px) {
+    /* Stacked: 10px padding + 20px marks + 6px gap + 18px text + 10px padding */
+    body.has-top-banner {
+        --top-banner-height: 64px;
+    }
+
+    .top-banner {
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 20px;
+    }
+
+    .top-banner-text {
+        font-size: 14px;
+        text-align: center;
+    }
+
+    body.has-top-banner .mobile-menu {
+        padding-top: calc(70px + var(--top-banner-height));
+    }
 }
 
 .header {
