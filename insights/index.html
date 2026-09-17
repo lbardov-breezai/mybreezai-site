@@ -472,7 +472,7 @@
               </div>`;
 
       return `
-        <article class="${cardClass}" onclick="window.location.href='/insights/post/#${post.slug}'" style="cursor: pointer;">
+        <article class="${cardClass}" onclick="window.location.href='/insights/post/${post.slug}/'" style="cursor: pointer;">
           <div class="blog-card-link">
             <div class="blog-card-image">
               <img src="${post.featuredImage}" alt="${post.title}" loading="lazy"${getFocusStyle(post)}>

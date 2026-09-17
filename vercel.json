@@ -12,5 +12,9 @@
     { "source": "/blog/post/", "destination": "/insights/post/", "permanent": true },
     { "source": "/smartmeals", "destination": "/products", "permanent": true },
     { "source": "/smartmeals/", "destination": "/products/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/insights/post/:slug", "destination": "/insights/post/index.html" },
+    { "source": "/insights/post/:slug/", "destination": "/insights/post/index.html" }
   ]
 }
