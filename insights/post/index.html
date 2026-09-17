@@ -26,7 +26,13 @@
   <!-- Open Graph tags - will be updated dynamically -->
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="EVERYAISLE">
+  <meta property="og:title" content="Title | EVERYAISLE">
+  <meta property="og:description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery and personalized shopping.">
+  <meta property="og:image" content="https://everyaisle.com/content/og/everyaisle-og.png">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Title | EVERYAISLE">
+  <meta name="twitter:description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery and personalized shopping.">
+  <meta name="twitter:image" content="https://everyaisle.com/content/og/everyaisle-og.png">
 </head>
 
 <body>
@@ -480,10 +486,13 @@
       const metaTitle = (post.metaTitle && post.metaTitle.trim()) || FALLBACK_META_TITLES[post.slug] || post.title;
       document.title = `${metaTitle} | EVERYAISLE`;
 
-      // Update Open Graph tags
+      // Update Open Graph and Twitter Card tags
       document.querySelector('meta[property="og:title"]')?.setAttribute('content', metaTitle);
       document.querySelector('meta[property="og:description"]')?.setAttribute('content', post.excerpt);
       document.querySelector('meta[property="og:image"]')?.setAttribute('content', post.featuredImage);
+      document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', metaTitle);
+      document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', post.excerpt);
+      document.querySelector('meta[name="twitter:image"]')?.setAttribute('content', post.featuredImage);
 
       // Populate article elements
       document.getElementById('articleCategory').textContent = getCategoryName(post.category);
