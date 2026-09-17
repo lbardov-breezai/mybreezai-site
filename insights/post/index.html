@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading... | EVERYAISLE Blog</title>
+  <title>Loading... | EVERYAISLE</title>
   <meta name="description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery and personalized shopping.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -454,11 +454,14 @@
 
     // Render article
     function renderArticle(post, allPosts) {
-      // Update page title and meta
-      document.title = `${post.title} | EVERYAISLE Blog`;
+      // Update page title and meta.
+      // metaTitle is an optional shortened title for the <title> tag / social
+      // shares; falls back to the full title when the sheet column is empty.
+      const metaTitle = (post.metaTitle && post.metaTitle.trim()) || post.title;
+      document.title = `${metaTitle} | EVERYAISLE`;
 
       // Update Open Graph tags
-      document.querySelector('meta[property="og:title"]')?.setAttribute('content', post.title);
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', metaTitle);
       document.querySelector('meta[property="og:description"]')?.setAttribute('content', post.excerpt);
       document.querySelector('meta[property="og:image"]')?.setAttribute('content', post.featuredImage);
 
