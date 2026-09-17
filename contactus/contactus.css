@@ -250,8 +250,8 @@
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     color: var(--text-primary);
-    background: var(--cream);
-    border: 2px solid transparent;
+    background: var(--white);
+    border: 1px solid var(--border-light);
     border-radius: 12px;
     transition: all 0.2s ease;
     outline: none;
@@ -259,7 +259,7 @@
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: var(--warm-gray);
+    color: var(--text-muted);
 }
 
 .form-group input:focus,
@@ -291,11 +291,11 @@
     align-items: center;
     justify-content: center;
     padding: 1rem 2rem;
-    background: var(--gold-500);
+    background: var(--text-primary);
     color: var(--white);
     text-decoration: none;
     border: none;
-    border-radius: 100px;
+    border-radius: 12px;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 1rem;
@@ -307,7 +307,7 @@
 
 .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(236, 156, 19, 0.35);
+    box-shadow: 0 10px 30px rgba(16, 42, 80, 0.35);
 }
 
 .btn-submit:active {
