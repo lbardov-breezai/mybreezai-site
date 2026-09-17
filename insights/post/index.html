@@ -234,6 +234,25 @@
   <script>
     const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP089cptBQQqPgcBh3XxtpnHHTzn0J-oYIZWLal_3ZCkx6T23cdC94aLCc-kLMeNV3k4GgZ0yZBD5O/pub?gid=0&single=true&output=csv';
 
+    // TEMPORARY: shortened titles for posts published before the sheet had a
+    // metaTitle column. Delete this map once metaTitle is filled in for these
+    // slugs in the sheet - it only applies when that column is empty.
+    const FALLBACK_META_TITLES = {
+      'meal-planning-front-door': "Why Meal Planning Is Grocery's New Front Door",
+      'breez-ai-awg-innovation-showcase': 'AWG Innovation Showcase: The Right Room, Right Time',
+      'associated-wholesale-grocers-launches-ai-shopping-assistant-wide-scale-deployment': 'AWG Launches AI Shopping Assistant Company-Wide',
+      'associated-wholesale-grocers-deploy-ai-platform': 'AWG Deploying SmartMeals AI Platform',
+      'harps-breez-ai-launch': 'Harps Deploys SmartMeals™ Across 150+ Stores',
+      'breez-ai-awg-showcase-takeaways': 'What the AWG Showcase Revealed About Grocery AI',
+      'local-grocers-are-having-a-moment-how-can-they-capitalize-on-it': 'How Local Grocers Can Capitalize on Their Moment',
+      'AWG-SmartMeals-Featured-In-Grocery-Dives-2026-AI-Industry-Roundup': "AWG SmartMeals Featured in Grocery Dive's AI Roundup",
+      'Breez-AI-Appoints-Former-AWG-CEO-David-Smith-as-chairman-of-the-board': 'Breez AI Appoints David Smith as Board Chairman',
+      'Breez-AI-Appoints-Former-AWG-CEO-Smith-Board-Chairman': 'Breez AI Appoints Smith as Board Chairman',
+      'AWG-CFO-Gary-Koch-Joins-Breez-AI-Board-as-Company-Continues-to-Build-Leadership-Team': 'AWG CFO Gary Koch Joins Breez AI Board',
+      'Breez-AI-to-More-than-Quadruple-Its-Active-Store-Count-by-August-as-Independent-Grocers-Accelerate-Adoption-of-AI-Shopping-Experiences': 'Breez AI Set to Quadruple Store Count by August',
+      'breez-ai-rebrands-as-everyaisle-and-expands-its-ai-personalization-platform': 'Breez AI Rebrands as EVERYAISLE™'
+    };
+
     // Get slug from URL
     function getSlugFromURL() {
       return window.location.hash.slice(1) || null;
@@ -456,8 +475,9 @@
     function renderArticle(post, allPosts) {
       // Update page title and meta.
       // metaTitle is an optional shortened title for the <title> tag / social
-      // shares; falls back to the full title when the sheet column is empty.
-      const metaTitle = (post.metaTitle && post.metaTitle.trim()) || post.title;
+      // shares; falls back to a hardcoded shortened title (see
+      // FALLBACK_META_TITLES above), then the full title, when empty.
+      const metaTitle = (post.metaTitle && post.metaTitle.trim()) || FALLBACK_META_TITLES[post.slug] || post.title;
       document.title = `${metaTitle} | EVERYAISLE`;
 
       // Update Open Graph tags
