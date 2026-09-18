@@ -1087,6 +1087,10 @@
     font-size: 1.1rem;
     line-height: 1.8;
     color: var(--text-primary);
+    /* styles.css sets text-wrap: balance on <html>. Browsers balance short
+       blocks (up to ~6 lines), which makes article paragraphs wrap early.
+       Body copy should fill each line, so use plain greedy wrapping here. */
+    text-wrap: wrap;
 }
 
 .article-body p {
