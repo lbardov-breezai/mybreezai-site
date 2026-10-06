@@ -686,12 +686,6 @@ body.has-top-banner .header {
     transition: none;
 }
 
-.hero-subtitle em {
-    font-style: italic;
-    font-weight: 600;
-    color: var(--teal-500);
-}
-
 /* ============ PARTNERS SECTION ============ */
 .partners-section {
     background: var(--cream);
@@ -1163,7 +1157,6 @@ body.has-top-banner .header {
 
 /* Gentle continuous float, independent of the tilt/hover transform on .suite-visual itself */
 .suite-visual-float {
-    margin-top: clamp(1rem, 3vw, 2rem);
     animation: suite-visual-float 5s ease-in-out infinite;
 }
 
