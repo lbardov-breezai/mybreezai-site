@@ -738,7 +738,7 @@ body.has-top-banner .header {
 .partners-carousel {
     display: flex;
     width: fit-content;
-    animation: scroll-partners 40s linear infinite;
+    animation: scroll-partners 53s linear infinite;
 }
 
 .partners-carousel:hover {
@@ -760,7 +760,9 @@ body.has-top-banner .header {
     display: flex;
     align-items: center;
     gap: 32px;
-    padding: 0 clamp(20px, 3vw, 40px);
+    /* Trailing space equals the gap, so the join between the two tracks
+       matches every other gap and the loop is seamless. */
+    padding: 0 32px 0 0;
 }
 
 .partner-logo {
@@ -826,7 +828,7 @@ body.has-top-banner .header {
         padding-bottom: 4rem;
     }
     .partners-carousel {
-        animation: scroll-partners 65s linear infinite;
+        animation: scroll-partners 87s linear infinite;
     }
     .partner-logo {
         padding: 10px;
@@ -838,7 +840,7 @@ body.has-top-banner .header {
         padding-bottom: 4rem;
     }
     .partners-carousel {
-        animation: scroll-partners 55s linear infinite;
+        animation: scroll-partners 73s linear infinite;
     }
 
     .partner-logo {
