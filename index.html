@@ -37,7 +37,7 @@
   <link rel="icon" href="/favicon/favicon.ico">
   <link rel="manifest" href="/favicon/site.webmanifest">
 
-  <link rel="stylesheet" href="/styles.css?v=71">
+  <link rel="stylesheet" href="/styles.css?v=78">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
 
   <script type="application/ld+json">
@@ -218,20 +218,28 @@
     </script>
 
     <section class="hero" id="hero">
-      <a class="hero-announce" id="heroAnnounce" href="/insights/post/breez-ai-rebrands-as-everyaisle-and-expands-its-ai-personalization-platform/">
-      <span class="top-banner-marks">
-        <img src="/content/banner-breez-mark.png" alt="" class="top-banner-mark top-banner-mark--breez">
-        <img src="/content/banner-arrow.svg" alt="" class="top-banner-arrow">
-        <img src="/content/banner-everyaisle-mark.svg" alt="" class="top-banner-mark top-banner-mark--everyaisle">
-      </span>
-      <span class="top-banner-text">BreezAI is now EVERYAISLE</span>
-      </a>
+      <div class="hero-content">
+        <!-- Floating product cards (shop.com-style): batches of cards pop in
+             left to right, hold briefly, leave left to right, then the next
+             batch comes in. Filled in by the script below. The stage lives in
+             .hero-content so the cards stay anchored to the text block. -->
+        <div class="hero-stage" id="heroStage" aria-hidden="true"></div>
 
-      <h1 class="hero-title" id="heroTitle"><span class="hero-line">Own the shop</span></h1>
-      <p class="hero-subtitle" id="heroSubtitle">
-        The mega-chains have spent years and millions building personalization that keeps shoppers coming back. Independent and regional grocers deserve the same edge: hyper-personalized AI experiences you continue to own.<br>
-        EVERYAISLE makes that possible, starting with a platform built to close the gap.
-      </p>
+        <a class="hero-announce" id="heroAnnounce" href="/insights/post/breez-ai-rebrands-as-everyaisle-and-expands-its-ai-personalization-platform/">
+        <span class="top-banner-marks">
+          <img src="/content/banner-breez-mark.png" alt="" class="top-banner-mark top-banner-mark--breez">
+          <img src="/content/banner-arrow.svg" alt="" class="top-banner-arrow">
+          <img src="/content/banner-everyaisle-mark.svg" alt="" class="top-banner-mark top-banner-mark--everyaisle">
+        </span>
+        <span class="top-banner-text">BreezAI is now EVERYAISLE</span>
+        </a>
+
+        <h1 class="hero-title" id="heroTitle"><span class="hero-line">Own the shop</span></h1>
+        <p class="hero-subtitle" id="heroSubtitle">
+          The mega-chains have spent years and millions building personalization that keeps shoppers coming back. Independent and regional grocers deserve the same edge: hyper-personalized AI experiences you continue to own.<br>
+          EVERYAISLE makes that possible, starting with a platform built to close the gap.
+        </p>
+      </div>
     </section>
 
     <section class="partners-section partners-section--grid">
@@ -897,12 +905,270 @@
       }
     });
 
+    // Hero stage: floating product cards shown in batches, like shop.com.
+    // A batch pops in left to right, holds briefly, leaves left to right,
+    // then the next batch comes in. Per card: w = display width (px),
+    // x = horizontal center (% of stage), y = top offset (px),
+    // s = scale (1 full size, below 1 smaller).
+    const heroStage = (() => {
+      const stage = document.getElementById('heroStage');
+      if (!stage) return { start() {} };
+
+      const dir = '/content/hero-cards/';
+      // LAYOUT picks the arrangement:
+      //   'randomAround' cards placed at new random spots around the text
+      //                  every time they appear
+      //   'aroundText'  cards scattered around the pill, headline and paragraph
+      //   'allAtOnce'   one row above the pill with every card
+      //   'twoBatches'  a row above the pill, alternating two smaller batches
+      // Row layouts: x = card center (% of stage width).
+      // Around layout: side = -1 left / 1 right of the text; e = half-width (px)
+      // of the text the card sits beside (pill/headline ~200, paragraph ~410);
+      // k = 0 hugs that text edge, 1 reaches the stage edge. The card is placed
+      // in the space between, so it never covers the text at any width.
+      // Random layout: r = card height / width; apart = cards that must land
+      // on opposite sides of the text (the two look-alike product cards).
+      const LAYOUT = 'randomAround';
+      const LAYOUTS = {
+        randomAround: { mode: 'random', apart: ['p3.png', 'ham.png'], batches: [[
+          { file: 'recipe.png', w: 141, s: 0.9, r: 1.329 },
+          { file: 'coupon.png', w: 197, s: 0.8, r: 1.367 },
+          { file: 'p3.png', w: 196, s: 0.75, r: 1.227 },
+          { file: 'ad.png', w: 248, s: 0.7, r: 0.545 },
+          { file: 'history.png', w: 194, s: 0.7, r: 1 },
+          { file: 'ai-expanded.png', w: 470, s: 0.5, r: 0.37 },
+          { file: 'ham.png', w: 196, s: 0.75, r: 1.227 }
+        ]] },
+        aroundText: { mode: 'around', batches: [[
+          { file: 'recipe.png', w: 141, s: 0.9, side: -1, e: 200, k: 0.05, y: 96 },
+          { file: 'coupon.png', w: 197, s: 0.8, side: -1, e: 200, k: 0.9, y: 124 },
+          { file: 'p3.png', w: 196, s: 0.75, side: -1, e: 410, k: 0.55, y: 352 },
+          { file: 'ad.png', w: 248, s: 0.7, side: 1, e: 200, k: 0.04, y: 104 },
+          { file: 'history.png', w: 194, s: 0.7, side: 1, e: 200, k: 0.95, y: 92 },
+          { file: 'ai-expanded.png', w: 470, s: 0.5, side: 1, e: 410, k: 0.95, y: 262 },
+          { file: 'ham.png', w: 196, s: 0.75, side: 1, e: 410, k: 0.25, y: 372 }
+        ]] },
+        allAtOnce: { mode: 'row', batches: [[
+          { file: 'coupon.png', w: 197, x: 7, y: 6, s: 0.85 },
+          { file: 'recipe.png', w: 141, x: 20, y: 70, s: 1 },
+          { file: 'p3.png', w: 196, x: 33.5, y: 40, s: 0.8 },
+          { file: 'ad.png', w: 248, x: 48, y: 10, s: 0.8 },
+          { file: 'history.png', w: 194, x: 62, y: 46, s: 0.75 },
+          { file: 'ai-expanded.png', w: 470, x: 78, y: 120, s: 0.52 },
+          { file: 'ham.png', w: 196, x: 93, y: 20, s: 0.8 }
+        ]] },
+        twoBatches: { mode: 'row', batches: [
+          [
+            { file: 'coupon.png', w: 197, x: 13, y: 8, s: 1 },
+            { file: 'recipe.png', w: 141, x: 37, y: 54, s: 1 },
+            { file: 'history.png', w: 194, x: 62, y: 22, s: 0.9 },
+            { file: 'p3.png', w: 196, x: 87, y: 44, s: 1 }
+          ],
+          [
+            { file: 'ham.png', w: 196, x: 17, y: 30, s: 1 },
+            { file: 'ad.png', w: 248, x: 46, y: 6, s: 1 },
+            { file: 'ai-expanded.png', w: 470, x: 77, y: 64, s: 0.7 }
+          ]
+        ] }
+      };
+      const { mode, apart = [], batches: BATCHES } = LAYOUTS[LAYOUT];
+      // The random layout uses the around-text stage geometry
+      stage.classList.add('hero-stage--' + (mode === 'random' ? 'around' : mode));
+
+      const ENTER_MS = 650;       // matches hero-card-in
+      const ENTER_STAGGER = 90;   // ms between cards popping in
+      const HOLD_MS = 2200;       // how long a full batch stays on screen
+      const LEAVE_MS = 400;       // matches hero-card-out
+      const LEAVE_STAGGER = 70;   // ms between cards leaving
+      const GAP_MS = 150;         // empty beat before the next batch
+
+      // Preload so later batches never pop in half-decoded
+      BATCHES.flat().forEach((item) => { new Image().src = dir + item.file; });
+
+      const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      let onScreen = true;
+      new IntersectionObserver((entries) => {
+        onScreen = entries[0].isIntersecting;
+      }).observe(stage);
+      // Hold the loop (between batches) while the tab or hero isn't visible
+      const whenVisible = async () => {
+        while (document.hidden || !onScreen) await wait(400);
+      };
+
+      const buildSlot = (item, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'hero-slot' + (item.s < 1 ? ' hero-slot--back' : '');
+        if (mode === 'random') {
+          slot.style.left = item.px + 'px';
+          slot.style.top = item.py + 'px';
+        } else if (mode === 'around') {
+          slot.style.setProperty('--side', item.side);
+          slot.style.setProperty('--e', item.e);
+          slot.style.setProperty('--k', item.k);
+        } else {
+          slot.style.setProperty('--x', item.x + '%');
+        }
+        if (item.y !== undefined) slot.style.setProperty('--y', item.y + 'px');
+        slot.style.setProperty('--s', item.s);
+        slot.style.setProperty('--w', item.w);
+        slot.style.setProperty('--delay', i * 2 + 1);
+
+        const float = document.createElement('div');
+        float.className = 'hero-float';
+        const img = document.createElement('img');
+        img.className = 'hero-card';
+        img.src = dir + item.file;
+        img.alt = '';
+        img.decoding = 'async';
+        img.draggable = false;
+        float.appendChild(img);
+        slot.appendChild(float);
+        return slot;
+      };
+
+      // Cards enter and leave in left-to-right order
+      // A batch lives in its own layer that drifts right to left for the
+      // batch's whole life: entering, holding and leaving all happen mid-move.
+      // Cards enter and leave in left-to-right order.
+      const batchLifetime = (n) =>
+        ENTER_MS + (n - 1) * ENTER_STAGGER + HOLD_MS + LEAVE_MS + (n - 1) * LEAVE_STAGGER;
+
+      // Random spots for a batch, measured against the live layout. Each card
+      // tries a handful of random spots that stay clear of the text, the other
+      // cards and the navbar, and keeps the one furthest from cards already
+      // placed so the set spreads out. Cards that find no room sit this round out.
+      const rand = (min, max) => min + Math.random() * Math.max(0, max - min);
+      const randomPlacement = (batch) => {
+        const st = stage.getBoundingClientRect();
+        if (!st.width) return [];
+        const u = parseFloat(getComputedStyle(stage).getPropertyValue('--u')) || 1;
+        const box = (r, pad) => ({
+          l: r.left - st.left - pad, r: r.right - st.left + pad,
+          t: r.top - st.top - pad, b: r.bottom - st.top + pad
+        });
+        const hits = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+        const text = ['heroAnnounce', 'heroTitle', 'heroSubtitle']
+          .map((id) => box(document.getElementById(id).getBoundingClientRect(), 28));
+        const hero = document.getElementById('hero').getBoundingClientRect();
+        const minY = hero.top + 96 - st.top;   // clear the fixed navbar
+        const maxY = hero.bottom - 12 - st.top;
+        const DRIFT_ROOM = 56;                  // batch drifts 48px each way
+        const centerX = st.width / 2;
+        const apartSide = Math.random() < 0.5 ? -1 : 1;
+
+        const placed = [];
+        const order = [...batch].sort(() => Math.random() - 0.5);
+        for (const item of order) {
+          const cw = item.w * item.s * u;
+          const ch = cw * item.r * 1.06;        // + idle bob
+          const ai = apart.indexOf(item.file);
+          const side = ai === -1 ? 0 : (ai === 0 ? apartSide : -apartSide);
+          let best = null;
+          let bestScore = -1;
+          for (let tries = 0; tries < 80; tries++) {
+            const l = rand(DRIFT_ROOM, st.width - DRIFT_ROOM - cw);
+            const t = rand(minY, maxY - ch);
+            const rect = { l, r: l + cw, t, b: t + ch };
+            const cx = l + cw / 2;
+            if (side && Math.sign(cx - centerX) !== side) continue;
+            if (text.some((tb) => hits(rect, tb))) continue;
+            if (placed.some((p) => hits(rect, box({ left: p.rect.l + st.left, right: p.rect.r + st.left, top: p.rect.t + st.top, bottom: p.rect.b + st.top }, 18)))) continue;
+            const score = placed.length
+              ? Math.min(...placed.map((p) => Math.hypot(p.cx - cx, p.cy - (t + ch / 2))))
+              : Math.random();
+            if (score > bestScore) {
+              bestScore = score;
+              best = { rect, cx, cy: t + ch / 2 };
+            }
+          }
+          if (best) placed.push({ ...best, item: { ...item, px: best.cx, py: best.rect.t, x: best.cx } });
+        }
+        return placed.map((p) => p.item);
+      };
+
+      const showBatch = (batch) => {
+        if (mode === 'random') batch = randomPlacement(batch);
+        const layer = document.createElement('div');
+        layer.className = 'hero-batch';
+        layer.style.setProperty('--drift-ms', batchLifetime(batch.length) + 'ms');
+        // Left-to-right order: row cards by x; around cards by side, then
+        // distance from the text (outer-left first ... outer-right last)
+        const pos = (c) => (mode === 'around' ? c.side * (c.e + c.k * 1000) : c.x);
+        // (random mode stores its px center in x, so it sorts like a row)
+        const slots = [...batch].sort((a, b) => pos(a) - pos(b)).map(buildSlot);
+        slots.forEach((slot, i) => {
+          const img = slot.querySelector('.hero-card');
+          img.style.setProperty('--enter-delay', (i * ENTER_STAGGER) + 'ms');
+          img.classList.add('is-entering');
+          layer.appendChild(slot);
+          // Clear the entrance animation so it stops overriding the hover
+          // transform (timer instead of animationend, which background tabs skip)
+          setTimeout(() => img.classList.remove('is-entering'), ENTER_MS + i * ENTER_STAGGER + 50);
+        });
+        stage.appendChild(layer);
+        return layer;
+      };
+
+      const hideBatch = async (layer) => {
+        const imgs = [...layer.querySelectorAll('.hero-card')];
+        imgs.forEach((img, i) => {
+          img.classList.remove('is-entering');
+          img.style.setProperty('--leave-delay', (i * LEAVE_STAGGER) + 'ms');
+          img.classList.add('is-leaving');
+        });
+        await wait(LEAVE_MS + (imgs.length - 1) * LEAVE_STAGGER + 40);
+        layer.remove();
+      };
+
+      const loop = async () => {
+        for (let b = 0; ; b = (b + 1) % BATCHES.length) {
+          await whenVisible();
+          const layer = showBatch(BATCHES[b]);
+          await wait(ENTER_MS + (BATCHES[b].length - 1) * ENTER_STAGGER + HOLD_MS);
+          await whenVisible();
+          await hideBatch(layer);
+          await wait(GAP_MS);
+        }
+      };
+
+      return {
+        start() {
+          stage.classList.add('is-live');
+          // Reduced motion: show the first batch and leave it in place
+          if (reduceMotion.matches) showBatch(BATCHES[0]);
+          else loop();
+        }
+      };
+    })();
+
+    // Hero fills the first screen: grow the hero so the partner logo
+    // carousel ends 20px above the bottom of the viewport. The hero centers
+    // its content, so the extra space splits above and below the text.
+    // Desktop/tablet only; never shrinks the hero below its content.
+    const fitHeroToViewport = () => {
+      const hero = document.getElementById('hero');
+      const carousel = document.querySelector('.partners-carousel');
+      if (!hero || !carousel) return;
+      hero.style.minHeight = '';
+      if (window.innerWidth <= 760) return;
+      const heroRect = hero.getBoundingClientRect();
+      const heroTop = heroRect.top + window.scrollY;
+      const belowHero = carousel.getBoundingClientRect().bottom - heroRect.bottom;
+      const target = window.innerHeight - 20 - belowHero - heroTop;
+      if (target > heroRect.height) hero.style.minHeight = target + 'px';
+    };
+    fitHeroToViewport();
+    window.addEventListener('resize', fitHeroToViewport);
+    window.addEventListener('load', fitHeroToViewport);
+    if (document.fonts) document.fonts.ready.then(fitHeroToViewport);
+
     // Show header and hero after intro completes
     const TOTAL_INTRO_TIME = 300 + 1500 + 150 + 1000;
     setTimeout(() => {
       const header = document.getElementById('header');
       if (header) header.classList.add('visible');
       if (heroAnnounce) heroAnnounce.classList.add('visible');
+      heroStage.start();
       heroTitle.classList.add('visible');
       if (heroBadge) setTimeout(() => heroBadge.classList.add('visible'), 900);
       setTimeout(() => heroSubtitle.classList.add('visible'), 200);

@@ -686,6 +686,191 @@ body.has-top-banner .header {
     transition: none;
 }
 
+/* ============ HERO STAGE (floating product cards) ============ */
+/* Pill + headline + paragraph (and the card stage anchored to them) */
+.hero-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero-stage {
+    --u: 1;
+    position: relative;
+    /* Wider than the hero column; the flex column centers the overflow evenly */
+    width: min(1320px, calc(100vw - 48px));
+    flex-shrink: 0;
+    height: calc(300px * var(--u));
+    margin: 0.5rem 0 1.75rem;
+    pointer-events: none;
+}
+
+.hero-batch {
+    position: absolute;
+    inset: 0;
+    animation: hero-batch-drift var(--drift-ms, 4000ms) linear both;
+}
+
+@keyframes hero-batch-drift {
+    from { transform: translateX(calc(48px * var(--u))); }
+    to { transform: translateX(calc(-48px * var(--u))); }
+}
+
+.hero-slot {
+    position: absolute;
+    left: var(--x);
+    top: calc(var(--y) * var(--u));
+    transform: translateX(-50%);
+    filter: drop-shadow(0 14px 22px rgba(16, 42, 80, 0.10)) drop-shadow(0 2px 5px rgba(16, 42, 80, 0.06));
+    z-index: 2;
+}
+
+.hero-slot--back {
+    z-index: 1;
+}
+
+/* Around layout: the stage becomes a layer behind the pill, headline and
+   paragraph, wider than the hero column, with cards on both sides of the text */
+.hero-content:has(> .hero-stage--around) > :not(.hero-stage) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Card y offsets are measured from 170px above the pill, so the cards move
+   with the text when the hero grows to fill the viewport */
+.hero-stage--around {
+    position: absolute;
+    top: -170px;
+    height: 600px;
+    left: 50%;
+    width: min(1520px, calc(100vw - 32px));
+    margin: 0;
+    transform: translateX(-50%);
+    z-index: 0;
+}
+
+/* Card center = text edge (e) + half the card + k of the space that's left
+   between the card and the stage edge, mirrored by side */
+.hero-stage--around .hero-slot {
+    --cw: calc(var(--w) * var(--s) * var(--u) * 1px);
+    left: calc(50% + var(--side) * (var(--e) * 1px + var(--cw) / 2 + var(--k) * (50% - var(--e) * 1px - var(--cw))));
+    top: var(--y);
+}
+
+/* Idle bob, same as shop.com: 4s ease-in-out, alternating, staggered per slot */
+.hero-float {
+    display: flex;
+    justify-content: center;
+    animation: hero-card-idle 4s ease-in-out infinite alternate;
+    animation-delay: calc(var(--delay) * -0.7s);
+}
+
+.hero-card {
+    display: block;
+    width: calc(var(--w) * var(--s) * var(--u) * 1px);
+    height: auto;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-card:hover {
+    transform: scale(1.025);
+}
+
+.hero-card:active {
+    transform: scale(0.98);
+}
+
+.hero-stage:not(.is-live) .hero-card {
+    opacity: 0;
+}
+
+.hero-card.is-entering {
+    animation: hero-card-in 0.65s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+    animation-delay: var(--enter-delay, 0s);
+}
+
+.hero-card.is-leaving {
+    animation: hero-card-out 0.4s cubic-bezier(0.4, 0, 1, 1) both;
+    animation-delay: var(--leave-delay, 0s);
+    pointer-events: none;
+}
+
+@keyframes hero-card-idle {
+    from { translate: 0 0; }
+    to { translate: 0 5%; }
+}
+
+/* Cards tip around the horizontal (X) axis as they come and go, like
+   shop.com: they swing up from a backward tilt when entering and keep
+   rolling the same way, tipping forward, when leaving. Same transform
+   function list on every keyframe so the rotation interpolates cleanly. */
+@keyframes hero-card-in {
+    from {
+        opacity: 0;
+        transform: perspective(700px) translateY(18px) rotateX(55deg) scale(0.84);
+        filter: blur(6px);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(700px) translateY(0) rotateX(0deg) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes hero-card-out {
+    from {
+        opacity: 1;
+        transform: perspective(700px) translateY(0) rotateX(0deg) scale(1);
+        filter: blur(0);
+    }
+    to {
+        opacity: 0;
+        transform: perspective(700px) translateY(-10px) rotateX(-55deg) scale(0.88);
+        filter: blur(6px);
+    }
+}
+
+@media (max-width: 1200px) {
+    .hero-stage { --u: 0.85; }
+}
+
+@media (max-width: 1000px) {
+    .hero-stage { --u: 0.72; }
+}
+
+/* Like shop.com, the floating cards are a desktop/tablet treatment */
+@media (max-width: 760px) {
+    .hero-stage { display: none; }
+}
+
+/* Around layout needs room beside the 780px paragraph */
+@media (max-width: 1599px) {
+    .hero-stage--around { --u: 0.85; }
+}
+
+@media (max-width: 1439px) {
+    .hero-stage--around { --u: 0.75; }
+}
+
+@media (max-width: 1279px) {
+    .hero-stage--around { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-float,
+    .hero-batch { animation: none; }
+    .hero-card.is-entering { animation: hero-card-fade 0.4s ease both; }
+}
+
+@keyframes hero-card-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* ============ PARTNERS SECTION ============ */
 .partners-section {
     background: var(--cream);
