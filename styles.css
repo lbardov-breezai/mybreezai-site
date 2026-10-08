@@ -732,7 +732,8 @@ body.has-top-banner .header {
 
 /* Around layout: the stage becomes a layer behind the pill, headline and
    paragraph, wider than the hero column, with cards on both sides of the text */
-.hero-content:has(> .hero-stage--around) > :not(.hero-stage) {
+.hero-content:has(> .hero-stage--around) > :not(.hero-stage),
+.hero-content:has(> .hero-stage--stream) > :not(.hero-stage) {
     position: relative;
     z-index: 1;
 }
@@ -748,6 +749,9 @@ body.has-top-banner .header {
     margin: 0;
     transform: translateX(-50%);
     z-index: 0;
+    /* The drifting batch layer is as wide as the stage; clip its empty
+       overhang so it never adds horizontal scroll. Cards stay inside. */
+    overflow-x: clip;
 }
 
 /* Card center = text edge (e) + half the card + k of the space that's left
@@ -756,6 +760,42 @@ body.has-top-banner .header {
     --cw: calc(var(--w) * var(--s) * var(--u) * 1px);
     left: calc(50% + var(--side) * (var(--e) * 1px + var(--cw) / 2 + var(--k) * (50% - var(--e) * 1px - var(--cw))));
     top: var(--y);
+}
+
+/* Stream layout (below 860px): full-viewport-width strip with one lane
+   above the pill. The hero content gets matching top padding so the lane
+   never covers the text (tallest card at its largest random size, plus the
+   random vertical offset and room for the flip-in dip). Cards slide past
+   the screen edges, so the strip clips horizontally. */
+.hero-content {
+    --stream-u: 0.55;
+}
+
+.hero-content:has(> .hero-stage--stream) {
+    padding-top: calc(250px * var(--stream-u) + 84px);
+}
+
+.hero-stage--stream {
+    --u: var(--stream-u);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    height: auto;
+    margin: 0;
+    transform: translateX(-50%);
+    overflow-x: clip;
+    z-index: 0;
+}
+
+.hero-stage--stream .hero-slot {
+    left: 0;
+    transform: none;
+}
+
+.hero-stage--stream .hero-slot--lane-top {
+    top: 0;
 }
 
 /* Idle bob, same as shop.com: 4s ease-in-out, alternating, staggered per slot */
@@ -844,10 +884,10 @@ body.has-top-banner .header {
 
 /* Like shop.com, the floating cards are a desktop/tablet treatment */
 @media (max-width: 760px) {
-    .hero-stage { display: none; }
+    .hero-stage:not(.hero-stage--stream) { display: none; }
 }
 
-/* Around layout needs room beside the 780px paragraph */
+/* Around layout shrinks with the screen; below 860px the stream takes over */
 @media (max-width: 1599px) {
     .hero-stage--around { --u: 0.85; }
 }
@@ -857,6 +897,14 @@ body.has-top-banner .header {
 }
 
 @media (max-width: 1279px) {
+    .hero-stage--around { --u: 0.65; }
+}
+
+@media (max-width: 1023px) {
+    .hero-stage--around { --u: 0.58; }
+}
+
+@media (max-width: 859px) {
     .hero-stage--around { display: none; }
 }
 

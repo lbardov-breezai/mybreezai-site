@@ -37,7 +37,7 @@
   <link rel="icon" href="/favicon/favicon.ico">
   <link rel="manifest" href="/favicon/site.webmanifest">
 
-  <link rel="stylesheet" href="/styles.css?v=78">
+  <link rel="stylesheet" href="/styles.css?v=82">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
 
   <script type="application/ld+json">
@@ -972,8 +972,29 @@
         ] }
       };
       const { mode, apart = [], batches: BATCHES } = LAYOUTS[LAYOUT];
-      // The random layout uses the around-text stage geometry
-      stage.classList.add('hero-stage--' + (mode === 'random' ? 'around' : mode));
+
+      // Below 860px the around-text layouts switch to a stream: one loose lane
+      // above the pill where cards drift right to left past the screen edges.
+      // To avoid a carousel feel every card gets a random size, height and
+      // gap, and some flip in or out mid-screen instead of crossing the whole
+      // way. All cards share one speed and each new card needs a clear gap,
+      // so cards never collide.
+      const smallScreen = window.matchMedia('(max-width: 859px)');
+      const canStream = mode === 'random' || mode === 'around';
+      const STREAM_ITEMS = BATCHES.flat();
+      const STREAM_SPEED = 55;    // px per second, same for every card
+      const STREAM_JITTER = 44;   // px of random vertical offset within the lane
+      const STREAM_GAP = [18, 90];  // px, random clear gap around each new card
+      let streaming = false;
+      let generation = 0;         // bumps on every mode switch; old loops exit
+
+      const applyMode = () => {
+        streaming = canStream && smallScreen.matches && !reduceMotion.matches;
+        stage.classList.toggle('hero-stage--stream', streaming);
+        // The random layout uses the around-text stage geometry
+        stage.classList.toggle('hero-stage--' + (mode === 'random' ? 'around' : mode), !streaming);
+      };
+      applyMode();
 
       const ENTER_MS = 650;       // matches hero-card-in
       const ENTER_STAGGER = 90;   // ms between cards popping in
@@ -998,7 +1019,9 @@
       const buildSlot = (item, i) => {
         const slot = document.createElement('div');
         slot.className = 'hero-slot' + (item.s < 1 ? ' hero-slot--back' : '');
-        if (mode === 'random') {
+        if (streaming) {
+          slot.classList.add('hero-slot--lane-' + item.lane);
+        } else if (mode === 'random') {
           slot.style.left = item.px + 'px';
           slot.style.top = item.py + 'px';
         } else if (mode === 'around') {
@@ -1042,17 +1065,26 @@
         const st = stage.getBoundingClientRect();
         if (!st.width) return [];
         const u = parseFloat(getComputedStyle(stage).getPropertyValue('--u')) || 1;
-        const box = (r, pad) => ({
-          l: r.left - st.left - pad, r: r.right - st.left + pad,
+        const box = (r, pad, padX = pad) => ({
+          l: r.left - st.left - padX, r: r.right - st.left + padX,
           t: r.top - st.top - pad, b: r.bottom - st.top + pad
         });
         const hits = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+        // Where the text will settle: ignore its intro slide (the pill and
+        // paragraph are still moving into place when the first batch lands)
+        const settledRect = (el) => {
+          const r = el.getBoundingClientRect();
+          const m = new DOMMatrix(getComputedStyle(el).transform);
+          return { left: r.left - m.e, right: r.right - m.e, top: r.top - m.f, bottom: r.bottom - m.f };
+        };
+        // Sideways clearance also covers the batch drift (48px * u each way),
+        // so a card beside the text can't drift into it
         const text = ['heroAnnounce', 'heroTitle', 'heroSubtitle']
-          .map((id) => box(document.getElementById(id).getBoundingClientRect(), 28));
+          .map((id) => box(settledRect(document.getElementById(id)), 28, 28 + 48 * u));
         const hero = document.getElementById('hero').getBoundingClientRect();
         const minY = hero.top + 96 - st.top;   // clear the fixed navbar
         const maxY = hero.bottom - 12 - st.top;
-        const DRIFT_ROOM = 56;                  // batch drifts 48px each way
+        const DRIFT_ROOM = 72;                  // batch drifts 48px each way, + shadow
         const centerX = st.width / 2;
         const apartSide = Math.random() < 0.5 ? -1 : 1;
 
@@ -1120,9 +1152,10 @@
         layer.remove();
       };
 
-      const loop = async () => {
-        for (let b = 0; ; b = (b + 1) % BATCHES.length) {
+      const loop = async (gen) => {
+        for (let b = 0; gen === generation; b = (b + 1) % BATCHES.length) {
           await whenVisible();
+          if (gen !== generation) return;
           const layer = showBatch(BATCHES[b]);
           await wait(ENTER_MS + (BATCHES[b].length - 1) * ENTER_STAGGER + HOLD_MS);
           await whenVisible();
@@ -1131,12 +1164,146 @@
         }
       };
 
+      // Stream deck: shuffled each pass; look-alike cards never back to back
+      let deck = [];
+      let lastFile = '';
+      const drawStreamItem = () => {
+        if (!deck.length) {
+          for (let tries = 0; tries < 30; tries++) {
+            deck = [...STREAM_ITEMS].sort(() => Math.random() - 0.5);
+            const files = [lastFile, ...deck.map((item) => item.file)];
+            const together = files.some((f, i) => i && apart.includes(f) && apart.includes(files[i - 1]));
+            if (!together) break;
+          }
+        }
+        const item = deck.shift();
+        lastFile = item.file;
+        return item;
+      };
+
+      // Cards currently in the lane, to keep new ones clear of them. A card's
+      // left edge at any moment follows from its animation's progress.
+      let streamCards = [];
+      const streamLeft = (c) => c.startX - (STREAM_SPEED * (c.travel.currentTime || 0)) / 1000;
+      const laneIsClear = (left, cw, gap) => streamCards.every((c) => {
+        const l = streamLeft(c);
+        return left + cw + gap <= l || left >= l + c.cw + gap;
+      });
+
+      // One stream card at left position `left` (the right edge of the screen
+      // when entering normally). Cards that start on screen flip in; some
+      // cards also flip out before they reach the left edge.
+      let streamCount = 0;
+      const placeStreamCard = (item, cw, size, left, width, popIn, enterDelay = 0) => {
+        const slot = buildSlot({ ...item, s: item.s * size, lane: 'top' }, streamCount++);
+        slot.style.top = rand(0, STREAM_JITTER) + 'px';
+        const img = slot.querySelector('.hero-card');
+        if (popIn) {
+          img.style.setProperty('--enter-delay', enterDelay + 'ms');
+          img.classList.add('is-entering');
+          setTimeout(() => img.classList.remove('is-entering'), ENTER_MS + enterDelay + 50);
+        }
+        stage.appendChild(slot);
+        const distance = left + cw + 40;
+        const travel = slot.animate(
+          [{ transform: `translateX(${left}px)` }, { transform: `translateX(${-cw - 40}px)` }],
+          { duration: (distance / STREAM_SPEED) * 1000, easing: 'linear' }
+        );
+        const card = { startX: left, cw, travel };
+        streamCards.push(card);
+        const remove = () => {
+          streamCards = streamCards.filter((c) => c !== card);
+          travel.cancel();
+          slot.remove();
+        };
+        travel.finished.then(remove, remove);
+
+        if (Math.random() < 0.35) {
+          // Flip out somewhere in the left half of its trip
+          const leaveAt = rand(0.45, 0.85) * travel.effect.getTiming().duration;
+          setTimeout(() => {
+            if (!slot.isConnected) return;
+            img.classList.remove('is-entering');
+            img.classList.add('is-leaving');
+            setTimeout(remove, LEAVE_MS + 40);
+          }, leaveAt);
+        }
+      };
+
+      // Try to add the next card: sometimes flip it in at a random clear spot
+      // mid-screen, otherwise slide it in from the right edge if there's room.
+      // Returns false when the lane is too busy right now.
+      let pendingItem = null;
+      const trySpawnStreamCard = () => {
+        const width = stage.getBoundingClientRect().width;
+        const u = parseFloat(getComputedStyle(stage).getPropertyValue('--u')) || 1;
+        const item = pendingItem || drawStreamItem();
+        const size = rand(0.85, 1.12);
+        const cw = item.w * item.s * size * u;
+        const gap = rand(...STREAM_GAP);
+        if (Math.random() < 0.35) {
+          for (let tries = 0; tries < 12; tries++) {
+            const left = rand(width * 0.2, width * 0.75 - cw);
+            if (laneIsClear(left, cw, gap)) {
+              pendingItem = null;
+              placeStreamCard(item, cw, size, left, width, true);
+              return true;
+            }
+          }
+        }
+        if (laneIsClear(width, cw, gap)) {
+          pendingItem = null;
+          placeStreamCard(item, cw, size, width, width, false);
+          return true;
+        }
+        pendingItem = item; // keep the order; try again shortly
+        return false;
+      };
+
+      const streamLoop = async (gen) => {
+        streamCards = [];
+        pendingItem = null;
+        const width = stage.getBoundingClientRect().width;
+        const u = parseFloat(getComputedStyle(stage).getPropertyValue('--u')) || 1;
+        // Open with a loose handful already on screen, left to right with
+        // random gaps, flipping in one after another
+        let left = rand(-0.05, 0.12) * width;
+        let order = 0;
+        while (left < width * 0.85) {
+          const item = drawStreamItem();
+          const size = rand(0.85, 1.12);
+          const cw = item.w * item.s * size * u;
+          placeStreamCard(item, cw, size, left, width, true, order++ * ENTER_STAGGER);
+          left += cw + rand(...STREAM_GAP) + rand(0, 60);
+        }
+        while (gen === generation) {
+          await wait(rand(0.4, 1.4) * 1000);
+          await whenVisible();
+          if (gen !== generation) return;
+          while (!trySpawnStreamCard() && gen === generation) await wait(300);
+        }
+      };
+
+      const run = () => {
+        const gen = ++generation;
+        stage.replaceChildren();
+        applyMode();
+        fitHeroToViewport();   // lane padding changes the hero height
+        if (streaming) {
+          streamLoop(gen);
+        } else if (reduceMotion.matches) {
+          // Reduced motion: show the first batch and leave it in place
+          showBatch(BATCHES[0]);
+        } else {
+          loop(gen);
+        }
+      };
+
       return {
         start() {
           stage.classList.add('is-live');
-          // Reduced motion: show the first batch and leave it in place
-          if (reduceMotion.matches) showBatch(BATCHES[0]);
-          else loop();
+          run();
+          if (canStream) smallScreen.addEventListener('change', run);
         }
       };
     })();
