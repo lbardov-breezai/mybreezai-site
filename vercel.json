@@ -1,5 +1,7 @@
 {
   "redirects": [
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/home/", "destination": "/", "permanent": true },
     { "source": "/groceryaisle", "destination": "/products", "permanent": true },
     { "source": "/groceryaisle/", "destination": "/products/", "permanent": true },
     { "source": "/product", "destination": "/products", "permanent": true },
