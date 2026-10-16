@@ -1,11 +1,13 @@
 // Hero lab: experimental homepage hero variants.
 // ?hero=<key> picks a variant; the switcher (bottom-left) shows on localhost
-// or whenever ?hero= is in the URL. Variants mount and unmount live, so
+// on Vercel previews, or whenever ?hero= is in the URL. Variants mount and unmount live, so
 // switching doesn't replay the intro. Without ?hero= nothing here runs.
 (() => {
   const params = new URLSearchParams(location.search);
-  const isLocal = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$/.test(location.hostname);
-  if (!isLocal && !params.has('hero')) return;
+  // Localhost and Vercel preview deployments get the lab; the production
+  // domain only gets it with an explicit ?hero=
+  const isLab = /^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])$|\.vercel\.app$/.test(location.hostname);
+  if (!isLab && !params.has('hero')) return;
 
   const hero = document.getElementById('hero');
   const content = hero && hero.querySelector('.hero-content');
