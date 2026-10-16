@@ -165,7 +165,7 @@ export function mountAisle3D({ bg, hero, reduceMotion }) {
     'linear-gradient(to bottom, rgba(250,249,245,1) 70px, rgba(250,249,245,0) 200px),' +
     'linear-gradient(to top, rgba(250,249,245,1) 0%, rgba(250,249,245,0) 30%),' +
     // overall wash so the aisle stays a backdrop to the copy
-    'linear-gradient(rgba(250,249,245,.3), rgba(250,249,245,.3))';
+    'linear-gradient(rgba(250,249,245,.45), rgba(250,249,245,.45))';
   bg.append(veil);
 
   let renderer;
@@ -181,7 +181,7 @@ export function mountAisle3D({ bg, hero, reduceMotion }) {
   renderer.setClearColor(0x000000, 0);
 
   const scene = new Scene();
-  scene.fog = new Fog(new Color(CREAM), 2.2, 13);
+  scene.fog = new Fog(new Color(CREAM), 1.8, 11.5);
   const camera = new PerspectiveCamera(50, 1, 0.05, 30);
   camera.position.set(0, EYE, 0);
 

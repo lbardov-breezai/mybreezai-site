@@ -21,7 +21,7 @@ const R = 0.14;         // corner radius
 const K = 0.17;         // knob radius
 const GAP = 0.34;       // space between pieces at rest
 const DEPTH = 0.16;
-const PX_PER_UNIT = 128; // on-screen scale of the pieces
+const PX_PER_UNIT = 115; // on-screen scale of the pieces
 const BEVEL = 0.05;
 
 // Body with a knob sticking out on the right and a notch cut in on the left.
