@@ -204,7 +204,7 @@
 
   const assistantVariant = async (scope) => {
     addBg(scope, 'hl-assistant-bg');
-    const chat = el('div', 'hl-chat', `
+    const chat = el('div', 'hl-chat hl-side', `
       <div class="hl-chat-head">
         <span>Shopping assistant</span>
         <span class="hl-chat-basket">Basket <b>0</b></span>
@@ -436,14 +436,253 @@
   };
 
   // ---------------------------------------------------------------
+  // E · SHOPPERS: the same store, a different shelf for every shopper.
+  // A deck of personalized storefront cards deals itself on a loop.
+  // ---------------------------------------------------------------
+  const SHOPPERS = [
+    {
+      hello: 'Good evening, Joe', tags: ['Family of 4', 'Taco Tuesday'],
+      items: [['Ground beef', '1 lb', '$4.99'], ['Taco shells', '12 ct', '$2.29'], ['Avocados', '3 ct', '$3.99']],
+      coupon: '$1.00 off taco shells'
+    },
+    {
+      hello: 'Hi Maria', tags: ['Gluten-free', 'Cooks for 2'],
+      items: [['Gluten-free penne', '12 oz', '$3.49'], ['Cherry tomatoes', '1 pint', '$2.99'], ['Fresh basil', '0.75 oz', '$1.99']],
+      coupon: '$0.50 off gluten-free pasta'
+    },
+    {
+      hello: 'Morning, Sam', tags: ['$80 weekly budget', 'Meal prep'],
+      items: [['Chicken thighs', '3 lb', '$7.47'], ['Brown rice', '2 lb', '$2.19'], ['Broccoli crowns', '1 lb', '$1.79']],
+      coupon: '$0.75 off chicken thighs'
+    }
+  ];
+
+  const shoppersVariant = async (scope) => {
+    addBg(scope, 'hl-shoppers-bg');
+    const deck = el('div', 'hl-deck hl-side');
+    deck.setAttribute('aria-hidden', 'true');
+    const cards = SHOPPERS.map((sh, i) => {
+      const card = el('div', 'hl-card', `
+        <div class="hl-card-store"><span>Your store</span><span>Picked for you</span></div>
+        <div class="hl-card-body">
+          <div class="hl-card-hello">${sh.hello}</div>
+          <div class="hl-card-tags">${sh.tags.map((t) => `<span>${t}</span>`).join('')}</div>
+          <div class="hl-card-label">This week's picks</div>
+          <div class="hl-items">${sh.items.map(([name, size, price]) =>
+            `<div class="hl-item"><span class="hl-item-name">${name}<small>${size}</small></span>` +
+            `<span class="hl-item-price">${price}</span><span class="hl-item-add">+</span></div>`).join('')}</div>
+          <div class="hl-coupon">${sh.coupon}</div>
+        </div>`);
+      card.dataset.pos = i;
+      deck.append(card);
+      return card;
+    });
+    content.append(deck);
+    scope.add(() => deck.remove());
+    window.dispatchEvent(new Event('resize'));
+
+    await whenRevealed();
+    if (!scope.alive) return;
+    await scope.wait(500);
+    deck.classList.add('is-in');
+    if (reduceMotion) return;
+
+    while (scope.alive) {
+      await scope.wait(4200);
+      if (!scope.alive) return;
+      if (document.hidden) continue;
+      const front = cards.find((c) => c.dataset.pos === '0');
+      front.classList.add('is-leaving');
+      await scope.wait(450);
+      cards.forEach((c) => { if (c !== front) c.dataset.pos = Number(c.dataset.pos) - 1; });
+      front.dataset.pos = cards.length - 1;
+      front.classList.remove('is-leaving');
+    }
+  };
+
+  // ---------------------------------------------------------------
+  // F · AISLE: a hairline grocery aisle in perspective, vanishing behind
+  // the headline. You drift down it (faster as you scroll), and shelf
+  // items light up as they get picked for a shopper.
+  // ---------------------------------------------------------------
+  const aisleVariant = async (scope) => {
+    const bg = addBg(scope, 'hl-aisle');
+    const canvas = el('canvas');
+    bg.append(canvas);
+    const ctx = canvas.getContext('2d');
+
+    let W = 0, H = 0, dpr = 1;
+    const size = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = bg.clientWidth;
+      H = bg.clientHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+    };
+    size();
+    scope.on(window, 'resize', size);
+
+    const SLOT = 0.13;
+    const Z_NEAR = 0.45;
+    const Z_FAR = 5;
+    const SHELVES = [-0.62, -0.31, 0, 0.31, 0.62];
+    const hash = (a, b, c) => {
+      let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0;
+      h = (h ^ (h >>> 13)) * 1274126177;
+      return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+    };
+
+    let travel = 0;
+    let lastScroll = window.scrollY;
+    let mx = 0, my = 0, tx = 0, ty = 0;
+    scope.on(window, 'scroll', () => {
+      travel += Math.abs(window.scrollY - lastScroll) * 0.002;
+      lastScroll = window.scrollY;
+    }, { passive: true });
+    scope.on(hero, 'pointermove', (e) => {
+      const r = bg.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / W - 0.5) * -60;
+      ty = ((e.clientY - r.top) / H - 0.5) * -30;
+    });
+
+    // Items currently lit up for a shopper: key -> { t0, gold }
+    const lit = new Map();
+
+    const draw = (now) => {
+      mx += (tx - mx) * 0.06;
+      my += (ty - my) * 0.06;
+      const f = Math.max(W * 0.3, 260);
+      const vx = W / 2 + mx;
+      const vy = H * 0.5 + my;
+      const P = (x, y, z) => [vx + (x * f) / z, vy + (y * f * 0.85) / z];
+      const fade = (z) => Math.max(0, Math.min(1, (Z_FAR - z) / (Z_FAR * 0.7))) * Math.max(0, Math.min(1, (z - Z_NEAR) * 6));
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+
+      // Shelf edges and floor/ceiling lines, both walls
+      for (const side of [-1, 1]) {
+        for (const y of [-0.85, ...SHELVES, 0.85]) {
+          const [x1, y1] = P(side, y, Z_NEAR);
+          const [x2, y2] = P(side, y, Z_FAR);
+          const g = ctx.createLinearGradient(x1, y1, x2, y2);
+          g.addColorStop(0, 'rgba(207,212,220,1)');
+          g.addColorStop(1, 'rgba(207,212,220,0)');
+          ctx.strokeStyle = g;
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        }
+      }
+
+      const first = Math.ceil((travel + Z_NEAR) / SLOT);
+      const last = Math.floor((travel + Z_FAR) / SLOT);
+      // Far to near so nearer items paint over farther ones
+      for (let i = last; i >= first; i--) {
+        const z = i * SLOT - travel;
+        const a = fade(z);
+        if (a <= 0.01) continue;
+        // Upright every 4 slots, moving with you
+        if (i % 9 === 0) {
+          for (const side of [-1, 1]) {
+            const [x1, y1] = P(side, -0.85, z);
+            const [, y2] = P(side, 0.85, z);
+            ctx.strokeStyle = `rgba(207,212,220,${a})`;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1, y2); ctx.stroke();
+          }
+        }
+        for (const side of [-1, 1]) {
+          for (let row = 1; row < SHELVES.length; row++) {
+            const r = hash(i, row, side + 2);
+            if (r < 0.1) continue; // gaps on the shelf
+            const depth = SLOT * (0.72 + 0.2 * hash(i, row, side + 7));
+            const height = 0.31 * (0.4 + 0.45 * hash(i, row, side + 11));
+            const yb = SHELVES[row] - 0.012;
+            const z2 = z + depth;
+            const [ax, ay] = P(side, yb, z);
+            const [bx, by] = P(side, yb, z2);
+            const [cx, cy] = P(side, yb - height, z2);
+            const [dx, dy] = P(side, yb - height, z);
+            const key = side + ':' + row + ':' + i;
+            const l = lit.get(key);
+            let k = 0;
+            if (l) {
+              const age = now - l.t0;
+              k = age < 400 ? age / 400 : age > 2600 ? Math.max(0, 1 - (age - 2600) / 500) : 1;
+              if (age > 3100) lit.delete(key);
+            }
+            const fill = l && l.gold ? [250, 243, 229] : [235, 243, 244];
+            const stroke = l && l.gold ? [244, 182, 66] : [23, 143, 174];
+            const base = 241;
+            ctx.fillStyle = `rgba(${base + (fill[0] - base) * k},${242 + (fill[1] - 242) * k},${245 + (fill[2] - 245) * k},${a})`;
+            ctx.strokeStyle = k > 0
+              ? `rgba(${stroke[0]},${stroke[1]},${stroke[2]},${a * (0.25 + 0.75 * k)})`
+              : `rgba(207,212,220,${a})`;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(cx, cy); ctx.lineTo(dx, dy); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+          }
+        }
+      }
+
+      // Keep the copy clear: a soft cream ellipse around the vanishing point
+      ctx.save();
+      ctx.translate(W / 2, H * 0.5);
+      ctx.scale(Math.max(1.4, W / H * 0.9), 1);
+      const rr = H * 0.36;
+      const clear = ctx.createRadialGradient(0, 0, 0, 0, 0, rr);
+      clear.addColorStop(0, 'rgba(250,249,245,1)');
+      clear.addColorStop(0.55, 'rgba(250,249,245,0.92)');
+      clear.addColorStop(1, 'rgba(250,249,245,0)');
+      ctx.fillStyle = clear;
+      ctx.fillRect(-rr, -rr, rr * 2, rr * 2);
+      ctx.restore();
+
+      // Fade into the page at the bottom
+      const bottom = ctx.createLinearGradient(0, H * 0.72, 0, H);
+      bottom.addColorStop(0, 'rgba(250,249,245,0)');
+      bottom.addColorStop(1, 'rgba(250,249,245,1)');
+      ctx.fillStyle = bottom;
+      ctx.fillRect(0, H * 0.72, W, H * 0.28);
+    };
+
+    // Pick a visible shelf item (mid-depth, so it's readable) to light up
+    let picks = 0;
+    const pick = () => {
+      const zMin = 0.7, zMax = 1.1;
+      const i = Math.floor((travel + zMin + Math.random() * (zMax - zMin)) / SLOT);
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const row = 1 + Math.floor(Math.random() * (SHELVES.length - 1));
+      if (hash(i, row, side + 2) < 0.1) return;
+      lit.set(side + ':' + row + ':' + i, { t0: performance.now(), gold: ++picks % 7 === 0 });
+    };
+
+    await whenRevealed();
+    if (!scope.alive) return;
+    if (reduceMotion) { draw(0); return; }
+    let prev = 0;
+    scope.frame((now) => {
+      const dt = prev ? Math.min(64, now - prev) : 16;
+      prev = now;
+      travel += dt * 0.00012;
+      draw(now);
+    });
+    while (scope.alive) {
+      await scope.wait(500 + Math.random() * 500);
+      if (!document.hidden) pick();
+    }
+  };
+
+  // ---------------------------------------------------------------
   // Switcher
   // ---------------------------------------------------------------
   const VARIANTS = [
     { key: 'current', label: 'Current', mount: null },
     { key: 'path', label: 'A · Path', mount: pathVariant },
-    { key: 'assistant', label: 'B · Assistant', mount: assistantVariant },
+    { key: 'assistant', label: 'B · Assistant', mount: assistantVariant, split: true },
     { key: 'kinetic', label: 'C · Kinetic', mount: kineticVariant },
-    { key: 'shelves', label: 'D · Shelves', mount: shelvesVariant }
+    { key: 'shelves', label: 'D · Shelves', mount: shelvesVariant },
+    { key: 'shoppers', label: 'E · Shoppers', mount: shoppersVariant, split: true },
+    { key: 'aisle', label: 'F · Aisle', mount: aisleVariant }
   ];
 
   let scope = null;
@@ -463,6 +702,7 @@
     if (active) document.body.classList.remove('hl-v-' + active.key);
     active = next;
     document.body.classList.add('hl-on', 'hl-v-' + next.key);
+    document.body.classList.toggle('hl-split', !!next.split);
     scope = makeScope();
     if (next.mount) next.mount(scope);
     window.dispatchEvent(new Event('resize'));
