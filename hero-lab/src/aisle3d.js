@@ -161,9 +161,11 @@ export function mountAisle3D({ bg, hero, reduceMotion }) {
   // Keep the copy clear and blend the edges into the page
   const veil = document.createElement('div');
   veil.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:' +
-    'radial-gradient(ellipse 44% 40% at 50% 52%, rgba(250,249,245,1) 0%, rgba(250,249,245,.93) 55%, rgba(250,249,245,0) 100%),' +
+    'radial-gradient(ellipse 52% 46% at 50% 52%, rgba(250,249,245,1) 0%, rgba(250,249,245,.95) 55%, rgba(250,249,245,0) 100%),' +
     'linear-gradient(to bottom, rgba(250,249,245,1) 70px, rgba(250,249,245,0) 200px),' +
-    'linear-gradient(to top, rgba(250,249,245,1) 0%, rgba(250,249,245,0) 30%)';
+    'linear-gradient(to top, rgba(250,249,245,1) 0%, rgba(250,249,245,0) 30%),' +
+    // overall wash so the aisle stays a backdrop to the copy
+    'linear-gradient(rgba(250,249,245,.3), rgba(250,249,245,.3))';
   bg.append(veil);
 
   let renderer;
@@ -179,7 +181,7 @@ export function mountAisle3D({ bg, hero, reduceMotion }) {
   renderer.setClearColor(0x000000, 0);
 
   const scene = new Scene();
-  scene.fog = new Fog(new Color(CREAM), 3, 15);
+  scene.fog = new Fog(new Color(CREAM), 2.2, 13);
   const camera = new PerspectiveCamera(50, 1, 0.05, 30);
   camera.position.set(0, EYE, 0);
 

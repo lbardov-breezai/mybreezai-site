@@ -1108,7 +1108,7 @@
     const bg = addBg(scope, 'hl-aisle');
     let aisle = null;
     try {
-      const mod = await import('/hero-lab/aisle3d.js');
+      const mod = await import('/hero-lab/dist/aisle3d.js');
       if (!scope.alive) return;
       aisle = mod.mountAisle3D({ bg, hero, reduceMotion });
     } catch (e) {

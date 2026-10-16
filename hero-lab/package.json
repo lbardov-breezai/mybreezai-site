@@ -3,7 +3,7 @@
   "private": true,
   "description": "Build for the homepage hero lab 3D aisle. Output is committed; the site itself has no build step.",
   "scripts": {
-    "build": "esbuild src/aisle3d.js --bundle --format=esm --minify --target=es2020 --outfile=aisle3d.js"
+    "build": "rm -rf dist && esbuild src/aisle3d.js src/suite3d.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=dist"
   },
   "dependencies": {
     "three": "0.186.1"

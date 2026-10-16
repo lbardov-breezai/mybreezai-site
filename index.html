@@ -1372,6 +1372,20 @@
 
   </script>
   <script src="/hero-lab/hero-lab.js" defer></script>
+  <script type="module">
+    // 3D puzzle pieces: load three.js only as the suite section gets close
+    const float = document.querySelector('.suite-visual-float');
+    if (float && window.matchMedia('(min-width: 561px)').matches) {
+      const io = new IntersectionObserver(([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        import('/hero-lab/dist/suite3d.js')
+          .then((m) => m.mountSuite3D(float))
+          .catch((e) => console.warn('[suite3d] falling back to CSS pieces', e));
+      }, { rootMargin: '400px 0px' });
+      io.observe(float);
+    }
+  </script>
 </body>
 
 </html>
