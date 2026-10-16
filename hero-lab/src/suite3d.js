@@ -21,6 +21,7 @@ const R = 0.14;         // corner radius
 const K = 0.17;         // knob radius
 const GAP = 0.34;       // space between pieces at rest
 const DEPTH = 0.16;
+const PX_PER_UNIT = 128; // on-screen scale of the pieces
 const BEVEL = 0.05;
 
 // Body with a knob sticking out on the right and a notch cut in on the left.
@@ -109,7 +110,7 @@ export async function mountSuite3D(float) {
   camera.position.set(0, 0, 9);
 
   const rig = new Group();        // cursor tilt + resting tilt of the set
-  rig.position.y = 0.3;
+  rig.position.y = 0.12;
   scene.add(rig);
 
   const shadowTex = shadowTexture();
@@ -151,8 +152,11 @@ export async function mountSuite3D(float) {
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // fit the resting set (about 4.6 units wide) in narrower frames
-    camera.position.z = Math.max(5.6, 4.6 / (2 * Math.tan((camera.fov * Math.PI) / 360) * camera.aspect));
+    // Hold a fixed scale (px per unit) so the pieces stay the same size as
+    // the canvas height changes; back off on narrow frames so the resting
+    // set (about 5.4 units wide) still fits.
+    const span = 2 * Math.tan((camera.fov * Math.PI) / 360);
+    camera.position.z = Math.max(h / (PX_PER_UNIT * span), 5.4 / (span * camera.aspect));
     camera.updateProjectionMatrix();
   };
   resize();
@@ -214,7 +218,7 @@ export async function mountSuite3D(float) {
       const togetherX = (p.i - 1) * PITCH;
       const bob = reduceMotion ? 0 : Math.sin(t * 1.3 + p.phase) * 0.06 * (1 - m) + Math.sin(t * 1.1) * 0.05 * m;
       const x = apartX + (togetherX - apartX) * m;
-      const y = bob - (1 - e) * 1.6;
+      const y = bob - (1 - e) * 0.35;
       const tilt = (p.tilt * Math.PI) / 180;
       p.holder.position.set(x, y, (1 - e) * -2);
       p.holder.rotation.set(
