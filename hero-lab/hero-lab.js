@@ -738,6 +738,175 @@
       ty = ((e.clientY - r.top) / H - 0.5) * -24;
     });
 
+    // ---- Packaging -------------------------------------------------
+    // Light packs with small hits of brand color, like a real shelf seen
+    // from a few steps away.
+    const BASES = [
+      [255, 255, 255], [250, 249, 245], [248, 249, 250], [241, 242, 245],
+      [235, 245, 245], [235, 243, 244], [250, 243, 229], [226, 229, 234]
+    ];
+    const ACCENTS = [
+      [23, 143, 174], [97, 197, 229], [244, 182, 66], [171, 212, 220],
+      [171, 212, 220], [248, 226, 182], [196, 231, 239], [236, 156, 19]
+    ];
+    const TYPES = [
+      [['bag', 0.4], ['box', 0.4], ['jar', 0.2]],
+      [['can', 0.45], ['jar', 0.3], ['box', 0.25]],
+      [['box', 0.5], ['bottle', 0.3], ['can', 0.2]],
+      [['box', 0.4], ['bottle', 0.4], ['bag', 0.2]]
+    ];
+    const DEPTH = { box: 0.88, can: 0.7, bottle: 0.58, jar: 0.78, bag: 0.92 };
+    const packCache = new Map();
+    const packFor = (run, row, side, room) => {
+      const key = run + ':' + row + ':' + side;
+      let p = packCache.get(key);
+      if (p) return p;
+      const r = (n) => hash(run, row * 13 + n, side + 40);
+      let acc = 0;
+      const pickT = r(1);
+      let type = 'box';
+      for (const [t, w] of TYPES[row]) { acc += w; if (pickT <= acc) { type = t; break; } }
+      const hFrac = { box: 0.62 + 0.28 * r(2), can: r(2) < 0.5 ? 0.9 : 0.46, bottle: 0.8 + 0.12 * r(2),
+        jar: 0.45 + 0.12 * r(2), bag: 0.6 + 0.2 * r(2) }[type];
+      p = {
+        type,
+        h: room * hFrac,
+        d: SLOT * DEPTH[type],
+        stack: type === 'can' && hFrac > 0.8 ? 2 : 1,
+        base: BASES[Math.floor(r(3) * BASES.length)],
+        accent: ACCENTS[Math.floor(r(4) * ACCENTS.length)],
+        accent2: ACCENTS[Math.floor(r(5) * ACCENTS.length)],
+        variant: r(6)
+      };
+      if (packCache.size > 4000) packCache.clear();
+      packCache.set(key, p);
+      return p;
+    };
+
+    // Map the unit square (u along the shelf, v top to bottom) onto a
+    // pack's front face, so shapes can be drawn flat and land in 3D.
+    const toFace = (q) => {
+      const [tl, tr, , bl] = q;
+      ctx.setTransform(dpr * (tr[0] - tl[0]), dpr * (tr[1] - tl[1]),
+        dpr * (bl[0] - tl[0]), dpr * (bl[1] - tl[1]), dpr * tl[0], dpr * tl[1]);
+    };
+    const toScreen = () => ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = (u1, v1, u2, v2, fill) => { ctx.fillStyle = fill; ctx.fillRect(u1, v1, u2 - u1, v2 - v1); };
+    const ellipse = (cu, cv, ru, rv, fill) => {
+      ctx.beginPath(); ctx.ellipse(cu, cv, ru, rv, 0, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill();
+    };
+    const cylinder = (c, a, u1, u2) => {
+      const g = ctx.createLinearGradient(u1, 0, u2, 0);
+      g.addColorStop(0, fog(c, a, 0.86));
+      g.addColorStop(0.35, fog(c, a, 1.06));
+      g.addColorStop(1, fog(c, a, 0.84));
+      return g;
+    };
+    const textBars = (u1, v, a, n = 2) => {
+      for (let t = 0; t < n; t++) rect(u1, v + t * 0.06, 1 - u1 - t * 0.12, v + t * 0.06 + 0.025, `rgba(145,157,175,${0.4 * a})`);
+    };
+
+    // Each shape builds its outline path in face space; fills happen there
+    // too, then the outline is stroked in screen space at 1px.
+    const SHAPES = {
+      box(s, a) {
+        const path = () => { ctx.beginPath(); ctx.rect(0, 0, 1, 1); };
+        path(); ctx.fillStyle = fog(s.base, a); ctx.fill();
+        if (s.variant < 0.5) {
+          rect(0, 0.16, 1, 0.5, fog(s.accent, a));
+          ellipse(0.5, 0.33, 0.26, 0.11, fog([255, 255, 255], a));
+        } else {
+          rect(0, 0, 1, 0.12, fog(s.accent, a));
+          ellipse(0.5, 0.42, 0.3, 0.18, fog(s.accent2, a, 1.05));
+        }
+        rect(0, 0.86, 1, 0.92, fog(s.accent2, a));
+        textBars(0.18, 0.62, a);
+        return path;
+      },
+      can(s, a) {
+        const n = s.stack;
+        const path = () => {
+          ctx.beginPath();
+          for (let c = 0; c < n; c++) ctx.rect(0.06, c / n + 0.02, 0.88, 1 / n - 0.02);
+        };
+        for (let c = 0; c < n; c++) {
+          const v1 = c / n + 0.02;
+          const v2 = (c + 1) / n;
+          const hh = v2 - v1;
+          rect(0.06, v1, 0.94, v2, cylinder([226, 229, 234], a, 0.06, 0.94));
+          rect(0.06, v1 + hh * 0.14, 0.94, v2 - hh * 0.1, cylinder(s.variant < 0.6 ? s.accent : s.base, a, 0.06, 0.94));
+          rect(0.06, v1 + hh * 0.42, 0.94, v1 + hh * 0.62, cylinder([255, 255, 255], a, 0.06, 0.94));
+          ellipse(0.5, v1, 0.44, 0.025, fog([207, 212, 220], a));
+        }
+        return path;
+      },
+      bottle(s, a) {
+        const path = () => {
+          ctx.beginPath();
+          ctx.moveTo(0.41, 0.05);
+          ctx.lineTo(0.41, 0.24);
+          ctx.quadraticCurveTo(0.12, 0.3, 0.12, 0.42);
+          ctx.lineTo(0.12, 0.97);
+          ctx.quadraticCurveTo(0.12, 1, 0.18, 1);
+          ctx.lineTo(0.82, 1);
+          ctx.quadraticCurveTo(0.88, 1, 0.88, 0.97);
+          ctx.lineTo(0.88, 0.42);
+          ctx.quadraticCurveTo(0.88, 0.3, 0.59, 0.24);
+          ctx.lineTo(0.59, 0.05);
+          ctx.closePath();
+        };
+        path(); ctx.fillStyle = cylinder(s.variant < 0.5 ? [235, 245, 245] : s.base, a, 0.12, 0.88); ctx.fill();
+        rect(0.39, 0, 0.61, 0.08, fog(s.accent2, a));
+        rect(0.12, 0.5, 0.88, 0.78, fog(s.accent, a));
+        rect(0.2, 0.58, 0.8, 0.7, fog([255, 255, 255], a));
+        return path;
+      },
+      jar(s, a) {
+        const path = () => {
+          ctx.beginPath();
+          ctx.moveTo(0.16, 0.04); ctx.lineTo(0.84, 0.04); ctx.lineTo(0.84, 0.18);
+          ctx.quadraticCurveTo(0.92, 0.2, 0.92, 0.3); ctx.lineTo(0.92, 0.94);
+          ctx.quadraticCurveTo(0.92, 1, 0.84, 1); ctx.lineTo(0.16, 1);
+          ctx.quadraticCurveTo(0.08, 1, 0.08, 0.94); ctx.lineTo(0.08, 0.3);
+          ctx.quadraticCurveTo(0.08, 0.2, 0.16, 0.18); ctx.closePath();
+        };
+        path(); ctx.fillStyle = cylinder(s.variant < 0.5 ? [250, 243, 229] : [235, 243, 244], a, 0.08, 0.92); ctx.fill();
+        rect(0.16, 0.04, 0.84, 0.18, cylinder(s.accent2, a, 0.16, 0.84));
+        rect(0.08, 0.42, 0.92, 0.8, fog([255, 255, 255], a));
+        rect(0.08, 0.42, 0.92, 0.5, fog(s.accent, a));
+        textBars(0.22, 0.6, a, 2);
+        return path;
+      },
+      bag(s, a) {
+        const path = () => {
+          ctx.beginPath();
+          ctx.moveTo(0.04, 0.06);
+          for (let t = 0; t <= 8; t++) ctx.lineTo(0.04 + t * 0.115, t % 2 ? 0 : 0.06);
+          ctx.lineTo(0.96, 0.92);
+          ctx.quadraticCurveTo(0.96, 1, 0.88, 1);
+          ctx.lineTo(0.12, 1);
+          ctx.quadraticCurveTo(0.04, 1, 0.04, 0.92);
+          ctx.closePath();
+        };
+        path(); ctx.fillStyle = cylinder(s.base, a, 0.04, 0.96); ctx.fill();
+        rect(0.04, 0.1, 0.96, 0.34, fog(s.accent, a));
+        ellipse(0.5, 0.64, 0.28, 0.17, fog(s.variant < 0.5 ? [248, 226, 182] : s.accent2, a));
+        textBars(0.2, 0.86, a, 1);
+        return path;
+      }
+    };
+
+    const drawPack = (face, spec, a, highlight) => {
+      toFace(face);
+      const path = SHAPES[spec.type](spec, a);
+      path();
+      toScreen();
+      ctx.lineWidth = highlight ? 1.5 : 1;
+      ctx.strokeStyle = highlight || `rgba(179,187,199,${a * 0.55})`;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+    };
+
     const lit = new Map();
 
     const draw = (now) => {
@@ -820,13 +989,12 @@
             if (hash(run, row, side + 2) < 0.07) continue; // empty spot on the shelf
             const yb = BOARDS[row];
             const room = BOARDS[row] - BOARDS[row + 1];
-            const color = PACK[Math.floor(hash(run, row, side + 5) * PACK.length)];
-            const h = room * (0.45 + 0.42 * hash(run, row, side + 11));
-            const d = SLOT * 0.9;
+            const spec = packFor(run, row, side, room);
             const front = SHELF_FRONT + 0.03;
-            const back = BACK - 0.03;
-            const top = yb - h;
-            const z2 = z + d;
+            const back = BACK - 0.03 - (spec.type === 'box' ? 0 : 0.06);
+            const top = yb - spec.h;
+            const zs = z + (SLOT * 0.94 - spec.d) / 2;
+            const z2 = zs + spec.d;
 
             const key = side + ':' + row + ':' + i;
             const l = lit.get(key);
@@ -838,24 +1006,19 @@
             }
             const lift = k * 0.025;
             const Y = (y) => y - lift;
-
-            // Near face (facing you), top face if below eye level, front face
-            poly([P(sx(front), Y(top), z), P(sx(back), Y(top), z), P(sx(back), Y(yb), z), P(sx(front), Y(yb), z)],
-              fog(color, a, 0.9), `rgba(179,187,199,${a * 0.6})`);
-            if (top > 0) {
-              poly([P(sx(front), Y(top), z), P(sx(back), Y(top), z), P(sx(back), Y(top), z2), P(sx(front), Y(top), z2)],
-                fog(color, a, 1.04));
-            }
-            const fc = [P(sx(front), Y(top), z), P(sx(front), Y(top), z2), P(sx(front), Y(yb), z2), P(sx(front), Y(yb), z)];
             const accent = l ? (l.gold ? [244, 182, 66] : [23, 143, 174]) : null;
-            poly(fc, fog(color, a), accent && k > 0
-              ? `rgba(${accent[0]},${accent[1]},${accent[2]},${a * k})`
-              : `rgba(179,187,199,${a * 0.7})`);
-            // Label band across the pack
-            const b1 = top + h * 0.38;
-            const b2 = top + h * 0.62;
-            poly([P(sx(front), Y(b1), z), P(sx(front), Y(b1), z2), P(sx(front), Y(b2), z2), P(sx(front), Y(b2), z)],
-              `rgba(255,255,255,${0.55 * a})`);
+
+            // Boxes show their side and (below eye level) their top
+            if (spec.type === 'box') {
+              poly([P(sx(front), Y(top), zs), P(sx(back), Y(top), zs), P(sx(back), Y(yb), zs), P(sx(front), Y(yb), zs)],
+                fog(spec.base, a, 0.88), `rgba(179,187,199,${a * 0.5})`);
+              if (top > 0) {
+                poly([P(sx(front), Y(top), zs), P(sx(back), Y(top), zs), P(sx(back), Y(top), z2), P(sx(front), Y(top), z2)],
+                  fog(spec.base, a, 1.03));
+              }
+            }
+            const face = [P(sx(front), Y(top), zs), P(sx(front), Y(top), z2), P(sx(front), Y(yb), z2), P(sx(front), Y(yb), zs)];
+            drawPack(face, spec, a, accent && k > 0 ? `rgba(${accent[0]},${accent[1]},${accent[2]},${a * k})` : null);
 
             // Shelf tag on the lip under the first facing of each run
             const runStart = (i + Math.floor(hash(row, side, 3) * 5)) % 3 === 0;
@@ -891,7 +1054,7 @@
       ctx.save();
       ctx.translate(W / 2, H * 0.5);
       ctx.scale(Math.max(1.4, W / H * 0.9), 1);
-      const rr = H * 0.42;
+      const rr = H * 0.46;
       const clear = ctx.createRadialGradient(0, 0, 0, 0, 0, rr);
       clear.addColorStop(0, 'rgba(250,249,245,1)');
       clear.addColorStop(0.6, 'rgba(250,249,245,0.94)');
