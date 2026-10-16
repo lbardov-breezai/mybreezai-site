@@ -673,6 +673,273 @@
   };
 
   // ---------------------------------------------------------------
+  // G · AISLE, REALISTIC: same idea as F, built like a real aisle.
+  // Shelves with front lips and uprights, products as boxes with depth
+  // and labels, runs of identical facings, a tiled floor and ceiling
+  // lights. Picked items get a teal shelf tag.
+  // ---------------------------------------------------------------
+  const aisleRealVariant = async (scope) => {
+    const bg = addBg(scope, 'hl-aisle');
+    const canvas = el('canvas');
+    bg.append(canvas);
+    const ctx = canvas.getContext('2d');
+
+    let W = 0, H = 0, dpr = 1;
+    const size = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = bg.clientWidth;
+      H = bg.clientHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+    };
+    size();
+    scope.on(window, 'resize', size);
+
+    const SLOT = 0.12;
+    const Z_NEAR = 0.42;
+    const Z_FAR = 5.5;
+    const BOARDS = [0.92, 0.5, 0.08, -0.34, -0.76]; // shelf tops, floor up
+    const SHELF_FRONT = 0.8;  // lip plane (distance from aisle center)
+    const BACK = 1.0;         // back of the shelving
+    const FLOOR = 1.0;
+    const CEIL = -1.25;
+    const CREAM = [250, 249, 245];
+    // Brand tints for packaging, weighted toward neutrals
+    const PACK = [
+      [226, 229, 234], [207, 212, 220], [241, 242, 245], [255, 255, 255],
+      [226, 229, 234], [207, 212, 220], [241, 242, 245], [255, 255, 255],
+      [235, 243, 244], [171, 212, 220], [235, 245, 245], [196, 231, 239],
+      [179, 187, 199], [250, 243, 229]
+    ];
+    const WASH = 0.72; // overall strength, so the aisle stays a backdrop
+
+    const hash = (a, b, c) => {
+      let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0;
+      h = (h ^ (h >>> 13)) * 1274126177;
+      return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+    };
+    // Mix a color toward the cream page by (1 - a): distance fog
+    const fog = (c, a, shade = 1) => {
+      a *= WASH;
+      const m = (i) => Math.round(CREAM[i] + (Math.min(255, c[i] * shade) - CREAM[i]) * a);
+      return `rgb(${m(0)},${m(1)},${m(2)})`;
+    };
+
+    let travel = 0;
+    let lastScroll = window.scrollY;
+    let mx = 0, my = 0, tx = 0, ty = 0;
+    scope.on(window, 'scroll', () => {
+      travel += Math.abs(window.scrollY - lastScroll) * 0.002;
+      lastScroll = window.scrollY;
+    }, { passive: true });
+    scope.on(hero, 'pointermove', (e) => {
+      const r = bg.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / W - 0.5) * -50;
+      ty = ((e.clientY - r.top) / H - 0.5) * -24;
+    });
+
+    const lit = new Map();
+
+    const draw = (now) => {
+      mx += (tx - mx) * 0.06;
+      my += (ty - my) * 0.06;
+      const f = Math.max(W * 0.3, 260);
+      const vx = W / 2 + mx;
+      const vy = H * 0.5 + my;
+      const P = (x, y, z) => [vx + (x * f) / z, vy + (y * f) / z];
+      const fade = (z) => Math.max(0, Math.min(1, (Z_FAR - z) / (Z_FAR * 0.75))) * Math.max(0, Math.min(1, (z - Z_NEAR) * 6));
+      const poly = (pts, fill, stroke) => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]);
+        ctx.closePath();
+        if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+        if (stroke) { ctx.strokeStyle = stroke; ctx.stroke(); }
+      };
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.fillStyle = 'rgb(250,249,245)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+
+      const first = Math.ceil((travel + Z_NEAR) / SLOT);
+      const last = Math.floor((travel + Z_FAR) / SLOT);
+
+      // Floor: lengthwise tile joints, then crosswise ones that move with you
+      for (const x of [-0.8, -0.4, 0, 0.4, 0.8]) {
+        const [x1, y1] = P(x, FLOOR, Z_NEAR);
+        const [x2, y2] = P(x, FLOOR, Z_FAR);
+        const g = ctx.createLinearGradient(x1, y1, x2, y2);
+        g.addColorStop(0, 'rgba(207,212,220,.9)');
+        g.addColorStop(1, 'rgba(207,212,220,0)');
+        ctx.strokeStyle = g;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      }
+      const TILE = 0.4;
+      for (let t = Math.ceil((travel + Z_NEAR) / TILE); t * TILE - travel < Z_FAR; t++) {
+        const z = t * TILE - travel;
+        const a = fade(z) * 0.9;
+        const [x1, y1] = P(-SHELF_FRONT, FLOOR, z);
+        const [x2] = P(SHELF_FRONT, FLOOR, z);
+        ctx.strokeStyle = `rgba(207,212,220,${a})`;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y1); ctx.stroke();
+      }
+
+      // Ceiling light panels
+      const LIGHT = 1.1;
+      for (let t = Math.floor((travel + Z_FAR) / LIGHT); t * LIGHT - travel > Z_NEAR - 0.5; t--) {
+        const z = t * LIGHT - travel;
+        if (z < Z_NEAR) continue;
+        const a = fade(z);
+        const z2 = z + 0.5;
+        poly([P(-0.22, CEIL, z), P(0.22, CEIL, z), P(0.22, CEIL, z2), P(-0.22, CEIL, z2)],
+          fog([255, 255, 255], a), `rgba(196,231,239,${a})`);
+      }
+
+      // Shelving, one wall at a time, far to near
+      for (const side of [-1, 1]) {
+        const sx = (v) => side * v;
+
+        // Uprights (end posts) every 8 slots
+        for (let i = last; i >= first; i--) {
+          if (i % 8 !== 0) continue;
+          const z = i * SLOT - travel;
+          const a = fade(z);
+          if (a <= 0.01) continue;
+          poly([P(sx(SHELF_FRONT), CEIL + 0.25, z), P(sx(SHELF_FRONT), FLOOR, z),
+            P(sx(SHELF_FRONT), FLOOR, z + 0.03), P(sx(SHELF_FRONT), CEIL + 0.25, z + 0.03)],
+          fog([226, 229, 234], a), `rgba(179,187,199,${a})`);
+        }
+
+        for (let i = last; i >= first; i--) {
+          const z = i * SLOT - travel;
+          const a = fade(z);
+          if (a <= 0.01) continue;
+          for (let row = 0; row < BOARDS.length - 1; row++) {
+            const run = Math.floor((i + Math.floor(hash(row, side, 3) * 5)) / 3);
+            if (hash(run, row, side + 2) < 0.07) continue; // empty spot on the shelf
+            const yb = BOARDS[row];
+            const room = BOARDS[row] - BOARDS[row + 1];
+            const color = PACK[Math.floor(hash(run, row, side + 5) * PACK.length)];
+            const h = room * (0.45 + 0.42 * hash(run, row, side + 11));
+            const d = SLOT * 0.9;
+            const front = SHELF_FRONT + 0.03;
+            const back = BACK - 0.03;
+            const top = yb - h;
+            const z2 = z + d;
+
+            const key = side + ':' + row + ':' + i;
+            const l = lit.get(key);
+            let k = 0;
+            if (l) {
+              const age = now - l.t0;
+              k = age < 350 ? age / 350 : age > 2800 ? Math.max(0, 1 - (age - 2800) / 500) : 1;
+              if (age > 3300) lit.delete(key);
+            }
+            const lift = k * 0.025;
+            const Y = (y) => y - lift;
+
+            // Near face (facing you), top face if below eye level, front face
+            poly([P(sx(front), Y(top), z), P(sx(back), Y(top), z), P(sx(back), Y(yb), z), P(sx(front), Y(yb), z)],
+              fog(color, a, 0.9), `rgba(179,187,199,${a * 0.6})`);
+            if (top > 0) {
+              poly([P(sx(front), Y(top), z), P(sx(back), Y(top), z), P(sx(back), Y(top), z2), P(sx(front), Y(top), z2)],
+                fog(color, a, 1.04));
+            }
+            const fc = [P(sx(front), Y(top), z), P(sx(front), Y(top), z2), P(sx(front), Y(yb), z2), P(sx(front), Y(yb), z)];
+            const accent = l ? (l.gold ? [244, 182, 66] : [23, 143, 174]) : null;
+            poly(fc, fog(color, a), accent && k > 0
+              ? `rgba(${accent[0]},${accent[1]},${accent[2]},${a * k})`
+              : `rgba(179,187,199,${a * 0.7})`);
+            // Label band across the pack
+            const b1 = top + h * 0.38;
+            const b2 = top + h * 0.62;
+            poly([P(sx(front), Y(b1), z), P(sx(front), Y(b1), z2), P(sx(front), Y(b2), z2), P(sx(front), Y(b2), z)],
+              `rgba(255,255,255,${0.55 * a})`);
+
+            // Shelf tag on the lip under the first facing of each run
+            const runStart = (i + Math.floor(hash(row, side, 3) * 5)) % 3 === 0;
+            if (runStart || k > 0) {
+              const tagC = k > 0 && accent ? accent : [255, 255, 255];
+              const tagFill = k > 0 ? `rgba(${tagC[0]},${tagC[1]},${tagC[2]},${a})` : fog([255, 255, 255], a);
+              poly([P(sx(SHELF_FRONT - 0.005), yb + 0.012, z), P(sx(SHELF_FRONT - 0.005), yb + 0.012, z + SLOT * 0.7),
+                P(sx(SHELF_FRONT - 0.005), yb + 0.05, z + SLOT * 0.7), P(sx(SHELF_FRONT - 0.005), yb + 0.05, z)],
+              tagFill, `rgba(179,187,199,${a})`);
+            }
+          }
+        }
+
+        // Shelf lips, one long strip per board
+        for (const yb of BOARDS) {
+          const pts = [P(sx(SHELF_FRONT), yb, Z_NEAR), P(sx(SHELF_FRONT), yb, Z_FAR),
+            P(sx(SHELF_FRONT), yb + 0.06, Z_FAR), P(sx(SHELF_FRONT), yb + 0.06, Z_NEAR)];
+          const g = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[1][0], pts[1][1]);
+          g.addColorStop(0, 'rgba(255,255,255,.95)');
+          g.addColorStop(1, 'rgba(255,255,255,0)');
+          poly(pts, null, null);
+          ctx.fillStyle = g;
+          ctx.fill();
+          const g2 = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[1][0], pts[1][1]);
+          g2.addColorStop(0, 'rgba(179,187,199,.9)');
+          g2.addColorStop(1, 'rgba(179,187,199,0)');
+          ctx.strokeStyle = g2;
+          ctx.stroke();
+        }
+      }
+
+      // Keep the copy clear: a soft cream ellipse around the vanishing point
+      ctx.save();
+      ctx.translate(W / 2, H * 0.5);
+      ctx.scale(Math.max(1.4, W / H * 0.9), 1);
+      const rr = H * 0.42;
+      const clear = ctx.createRadialGradient(0, 0, 0, 0, 0, rr);
+      clear.addColorStop(0, 'rgba(250,249,245,1)');
+      clear.addColorStop(0.6, 'rgba(250,249,245,0.94)');
+      clear.addColorStop(1, 'rgba(250,249,245,0)');
+      ctx.fillStyle = clear;
+      ctx.fillRect(-rr, -rr, rr * 2, rr * 2);
+      ctx.restore();
+
+      const bottom = ctx.createLinearGradient(0, H * 0.7, 0, H);
+      bottom.addColorStop(0, 'rgba(250,249,245,0)');
+      bottom.addColorStop(1, 'rgba(250,249,245,1)');
+      ctx.fillStyle = bottom;
+      ctx.fillRect(0, H * 0.7, W, H * 0.3);
+
+      // Soft start under the navbar instead of a hard edge
+      const topFade = ctx.createLinearGradient(0, 70, 0, 200);
+      topFade.addColorStop(0, 'rgba(250,249,245,1)');
+      topFade.addColorStop(1, 'rgba(250,249,245,0)');
+      ctx.fillStyle = topFade;
+      ctx.fillRect(0, 0, W, 200);
+    };
+
+    let picks = 0;
+    const pick = () => {
+      const zMin = 0.7, zMax = 1.15;
+      const i = Math.floor((travel + zMin + Math.random() * (zMax - zMin)) / SLOT);
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const row = Math.floor(Math.random() * (BOARDS.length - 1));
+      lit.set(side + ':' + row + ':' + i, { t0: performance.now(), gold: ++picks % 7 === 0 });
+    };
+
+    await whenRevealed();
+    if (!scope.alive) return;
+    if (reduceMotion) { draw(0); return; }
+    let prev = 0;
+    scope.frame((now) => {
+      const dt = prev ? Math.min(64, now - prev) : 16;
+      prev = now;
+      travel += dt * 0.00012;
+      draw(now);
+    });
+    while (scope.alive) {
+      await scope.wait(500 + Math.random() * 500);
+      if (!document.hidden) pick();
+    }
+  };
+
+  // ---------------------------------------------------------------
   // Switcher
   // ---------------------------------------------------------------
   const VARIANTS = [
@@ -682,7 +949,8 @@
     { key: 'kinetic', label: 'C · Kinetic', mount: kineticVariant },
     { key: 'shelves', label: 'D · Shelves', mount: shelvesVariant },
     { key: 'shoppers', label: 'E · Shoppers', mount: shoppersVariant, split: true },
-    { key: 'aisle', label: 'F · Aisle', mount: aisleVariant }
+    { key: 'aisle', label: 'F · Aisle', mount: aisleVariant },
+    { key: 'aisle-real', label: 'G · Aisle, real', mount: aisleRealVariant }
   ];
 
   let scope = null;
@@ -691,7 +959,7 @@
   const setUrl = () => {
     const p = new URLSearchParams(location.search);
     if (active.key === 'current') p.delete('hero'); else p.set('hero', active.key);
-    if (document.body.classList.contains('hl-focus')) p.delete('focus'); else p.set('focus', '0');
+    p.delete('focus');
     const q = p.toString();
     history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
   };
@@ -720,26 +988,14 @@
     b.addEventListener('click', () => activate(v.key));
     bar.append(b);
   });
-  bar.append(el('span', 'hl-sep'));
-  const focusBtn = el('button', 'hl-toggle', 'Focus');
-  focusBtn.type = 'button';
-  focusBtn.title = 'Show only the hero and the sections right under it (key F)';
-  const setFocus = (on) => {
-    document.body.classList.toggle('hl-focus', on);
-    focusBtn.classList.toggle('is-active', on);
-    if (active) setUrl();
-  };
-  focusBtn.addEventListener('click', () => setFocus(!document.body.classList.contains('hl-focus')));
-  bar.append(focusBtn);
   document.body.append(bar);
 
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || /input|textarea|select/i.test(e.target.tagName)) return;
     const n = Number(e.key);
     if (Number.isInteger(n) && VARIANTS[n]) activate(VARIANTS[n].key);
-    else if (e.key === 'f' || e.key === 'F') focusBtn.click();
   });
 
-  setFocus(params.get('focus') !== '0');
+  document.body.classList.add('hl-focus');
   activate(params.get('hero') || 'current');
 })();
