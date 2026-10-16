@@ -260,33 +260,24 @@ body.has-top-banner .header {
 }
 
 @media (max-width: 600px) {
-    /* Stacked bar: 10px padding + 20px marks + 6px gap + 18px text + 10px padding */
-    body {
-        --top-banner-height: 64px;
-    }
-
+    /* One row, like desktop, just a touch tighter so it fits small phones */
     .hero-announce {
-        flex-direction: column;
-        gap: 6px;
-        border-radius: 20px;
-        padding: 10px 20px;
+        gap: 10px;
+        padding: 8px 14px;
     }
 
     .banner-flyer {
-        flex-direction: column;
-        gap: 6px;
+        gap: 10px;
     }
 
     .top-banner {
-        flex-direction: column;
-        justify-content: center;
-        gap: 6px;
-        padding: 10px 20px;
+        gap: 10px;
+        padding: 0 14px;
     }
 
     .top-banner-text {
-        font-size: 14px;
-        text-align: center;
+        font-size: 13px;
+        white-space: nowrap;
     }
 
     body.has-top-banner .mobile-menu {
