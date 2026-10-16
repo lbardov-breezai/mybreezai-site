@@ -678,7 +678,7 @@
   // and labels, runs of identical facings, a tiled floor and ceiling
   // lights. Picked items get a teal shelf tag.
   // ---------------------------------------------------------------
-  const aisleRealVariant = async (scope) => {
+  const aisleCanvasVariant = async (scope) => {
     const bg = addBg(scope, 'hl-aisle');
     const canvas = el('canvas');
     bg.append(canvas);
@@ -1100,6 +1100,25 @@
       await scope.wait(500 + Math.random() * 500);
       if (!document.hidden) pick();
     }
+  };
+
+  // G in 3D (three.js, built from src/aisle3d.js). Loaded on demand; falls
+  // back to the canvas aisle above when WebGL or the module isn't available.
+  const aisleRealVariant = async (scope) => {
+    const bg = addBg(scope, 'hl-aisle');
+    let aisle = null;
+    try {
+      const mod = await import('/hero-lab/aisle3d.js');
+      if (!scope.alive) return;
+      aisle = mod.mountAisle3D({ bg, hero, reduceMotion });
+    } catch (e) {
+      console.warn('[hero-lab] 3D aisle unavailable, using canvas fallback', e);
+    }
+    if (!scope.alive) { if (aisle) aisle.dispose(); return; }
+    if (!aisle) { bg.remove(); return aisleCanvasVariant(scope); }
+    scope.add(() => aisle.dispose());
+    await whenRevealed();
+    if (scope.alive) aisle.start();
   };
 
   // ---------------------------------------------------------------
