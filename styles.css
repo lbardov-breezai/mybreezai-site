@@ -218,7 +218,7 @@ body {
 
 /* Orbit border, after Originkit's orbit-border-button. .rb-band is a 1px
    ring masked out of the pill's edge. Behind it, .rb-comet is a square as
-   wide as the pill's diagonal, spinning at a constant 108deg/s; it carries a
+   wide as the pill's diagonal, spinning at a slow constant 45deg/s; it carries a
    conic comet (solid head, fading tail) drawn twice: blurred for the glow
    and at 45% for the core. Hovering grows the arc to the full 360deg. */
 @property --rb-arc {
@@ -279,7 +279,7 @@ body {
     height: var(--rb-comet-size, 320px);
     margin-top: calc(var(--rb-comet-size, 320px) / -2);
     margin-left: calc(var(--rb-comet-size, 320px) / -2);
-    animation: rb-spin 3.333s linear infinite;
+    animation: rb-spin 8s linear infinite; /* calmer than the reference's 3.3s lap */
 }
 
 .rb-comet-glow,
