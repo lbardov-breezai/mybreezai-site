@@ -175,8 +175,10 @@ body {
     align-items: center;
     position: relative;
     isolation: isolate;
+    box-sizing: border-box;
+    height: 40px;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 0 12px;
     margin-bottom: 12px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.6);
@@ -347,7 +349,6 @@ body.has-top-banner .header {
     /* One row, like desktop, just a touch tighter so it fits small phones */
     .hero-announce {
         gap: 5px;
-        padding: 8px 14px;
     }
 
     .top-banner {
