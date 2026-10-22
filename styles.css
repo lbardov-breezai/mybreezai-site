@@ -193,13 +193,7 @@ body {
     animation: short-slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.hero-announce:hover {
-    scale: 1.03;
-}
 
-.hero-announce:active {
-    scale: 0.99;
-}
 
 /* Rebrand pill content (Figma: Creative 2.09, node 136:3005): the words and
    both marks sit in one row, shared by the hero pill and the fixed bar. */
@@ -220,70 +214,67 @@ body {
 .rb-mark--breez { transform: rotate(-8deg); }
 .rb-mark--everyaisle { transform: rotate(8deg); }
 
-/* Orbit: an aqua comet that circles the pill's border. A conic gradient is
-   spun through a registered angle and masked down to the 1.5px ring; a
-   blurred copy just outside gives it a soft glow. Hovering stretches the
-   comet's tail most of the way around. */
-@property --rb-angle {
-    syntax: '<angle>';
-    inherits: false;
-    initial-value: 0deg;
-}
-
-@property --rb-arc {
-    syntax: '<percentage>';
+/* Orbit: a soft aqua beam that travels the pill's border at one steady speed.
+   Each rect is the border path normalised to length 100; the layers are
+   dashes of different lengths whose leading edges all sit at --rb-p, so they
+   stack into a bright head with a fading tail. The glow is a blurred copy. */
+@property --rb-p {
+    syntax: '<number>';
     inherits: true;
-    initial-value: 24%;
-}
-
-.hero-announce {
-    --rb-arc: 24%;
-    transition: box-shadow 0.2s ease, scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), --rb-arc 0.6s ease;
-}
-
-.hero-announce:hover {
-    --rb-arc: 72%;
-}
-
-.hero-announce-orbit,
-.hero-announce-glow {
-    position: absolute;
-    border-radius: inherit;
-    pointer-events: none;
-    z-index: -1;
-    background: conic-gradient(from var(--rb-angle),
-            rgba(97, 197, 229, 0) 0%,
-            rgba(97, 197, 229, 0) calc(100% - var(--rb-arc)),
-            rgba(97, 197, 229, 0.55) calc(100% - var(--rb-arc) * 0.35),
-            #61C5E5 99%,
-            rgba(97, 197, 229, 0) 100%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-    animation: rb-orbit 3.6s linear infinite;
+    initial-value: 0;
 }
 
 .hero-announce-orbit {
-    inset: 0;
-    padding: 1.5px;
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    overflow: visible;
+    pointer-events: none;
+    z-index: -1;
+    animation: rb-lap 9s linear infinite;
 }
 
-.hero-announce-glow {
-    inset: -4px;
-    padding: 5px;
-    border-radius: 16px;
-    filter: blur(4px);
-    opacity: 0.7;
+.rb-beam {
+    fill: none;
+    stroke: #61C5E5;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: var(--rb-len) calc(100 - var(--rb-len));
+    stroke-dashoffset: calc(var(--rb-len) - var(--rb-p));
 }
 
-@keyframes rb-orbit {
-    to { --rb-angle: 360deg; }
+/* Nine short-to-long dashes at low opacity overlap into a smooth fade:
+   bright at the head, thinning out along the tail. */
+.rb-beam { opacity: 0.17; }
+.rb-beam--glow { --rb-len: 14; stroke-width: 4; opacity: 0.3; }
+
+@keyframes rb-lap {
+    to { --rb-p: 100; }
+}
+
+/* Hover: the beam keeps its pace; the border softly lights up all round,
+   the pill firms up to white, and the two marks straighten up. */
+.hero-announce {
+    transition: box-shadow 0.5s ease, background-color 0.5s ease, translate 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-announce:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.55), 0 4px 14px rgba(97, 197, 229, 0.16);
+    translate: 0 -1px;
+}
+
+.hero-announce .rb-mark {
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hero-announce:hover .rb-mark {
+    transform: rotate(0deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-announce-orbit,
-    .hero-announce-glow {
-        animation: none;
+    .hero-announce-orbit {
+        display: none;
     }
 }
 
