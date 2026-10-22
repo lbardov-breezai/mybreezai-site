@@ -216,71 +216,89 @@ body {
 .rb-mark--breez { transform: rotate(-8deg); }
 .rb-mark--everyaisle { transform: rotate(8deg); }
 
-/* Orbit: a soft aqua beam that travels the pill's border at one steady speed.
-   Each rect is the border path normalised to length 100; the layers are
-   dashes of different lengths whose leading edges all sit at --rb-p, so they
-   stack into a bright head with a fading tail. The glow is a blurred copy. */
-@property --rb-p {
-    syntax: '<number>';
+/* Orbit border, after Originkit's orbit-border-button. .rb-band is a 1px
+   ring masked out of the pill's edge. Behind it, .rb-comet is a square as
+   wide as the pill's diagonal, spinning at a constant 108deg/s; it carries a
+   conic comet (solid head, fading tail) drawn twice: blurred for the glow
+   and at 45% for the core. Hovering grows the arc to the full 360deg. */
+@property --rb-arc {
+    syntax: '<angle>';
     inherits: true;
-    initial-value: 0;
+    initial-value: 108deg;
 }
 
-.hero-announce-orbit {
-    position: absolute;
-    top: -6px;
-    left: -6px;
-    overflow: visible;
-    pointer-events: none;
-    z-index: -1;
-    animation: rb-lap 9s linear infinite;
-}
-
-.rb-beam {
-    fill: none;
-    stroke: #61C5E5;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-dasharray: var(--rb-len) calc(100 - var(--rb-len));
-    stroke-dashoffset: calc(var(--rb-len) - var(--rb-p));
-}
-
-/* Nine short-to-long dashes at low opacity overlap into a faint, smooth
-   tail; a short, thicker, fully opaque head with its own glow leads it. */
-.rb-beam { opacity: 0.09; }
-.rb-beam--head { --rb-len: 2.6; stroke-width: 2.25; opacity: 1; }
-.rb-beam--glow { --rb-len: 5; stroke-width: 6; opacity: 0.75; }
-
-/* Hover: a solid ring grows backwards from the head until it wraps the
-   whole border, and shrinks back on the way out. */
-@property --rb-ring {
-    syntax: '<number>';
+@property --rb-solid {
+    syntax: '<angle>';
     inherits: true;
-    initial-value: 0;
+    initial-value: 32.4deg;
 }
 
-.rb-beam--ring {
-    --rb-len: var(--rb-ring);
-    stroke-linecap: butt; /* a zero-length dash with round caps would leave a dot */
-    opacity: 0.85;
-}
-
-@keyframes rb-lap {
-    to { --rb-p: 100; }
-}
-
-/* Hover: the beam's ring wraps the whole border (above), the pill firms up
-   to white, and the two marks straighten up. */
 .hero-announce {
-    --rb-ring: 0;
-    transition: box-shadow 0.5s ease, background-color 0.5s ease, translate 0.5s cubic-bezier(0.22, 1, 0.36, 1), --rb-ring 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+    --rb-arc: 108deg;      /* 30% of the ring */
+    --rb-solid: 32.4deg;   /* arc^2 / 360: the fully solid head */
+    transition:
+        box-shadow 0.5s ease,
+        background-color 0.5s ease,
+        scale 0.6s cubic-bezier(0.44, 0, 0.56, 1),
+        --rb-arc 0.45s cubic-bezier(0.33, 1, 0.68, 1),
+        --rb-solid 0.45s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .hero-announce:hover {
-    --rb-ring: 100;
+    --rb-arc: 360deg;
+    --rb-solid: 360deg;
+    scale: 1.04;
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.18), 0 4px 14px rgba(97, 197, 229, 0.16);
-    translate: 0 -1px;
+}
+
+.hero-announce:hover:active {
+    scale: 1.01; /* 1.04 x 0.97 press */
+}
+
+.rb-band {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    padding: 1.5px;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    -webkit-mask-clip: border-box, content-box;
+    -webkit-mask-composite: xor;
+    mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    mask-clip: border-box, content-box;
+    mask-composite: exclude;
+}
+
+.rb-comet {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--rb-comet-size, 320px);
+    height: var(--rb-comet-size, 320px);
+    margin-top: calc(var(--rb-comet-size, 320px) / -2);
+    margin-left: calc(var(--rb-comet-size, 320px) / -2);
+    animation: rb-spin 3.333s linear infinite;
+}
+
+.rb-comet-glow,
+.rb-comet-core {
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(from 0deg,
+            #61C5E5 0deg,
+            #61C5E5 var(--rb-solid),
+            rgba(97, 197, 229, 0) var(--rb-arc),
+            rgba(97, 197, 229, 0) 360deg);
+}
+
+.rb-comet-glow { filter: blur(13px); }
+.rb-comet-core { opacity: 0.9; } /* reference uses 0.45 on black; a light page needs more */
+
+/* counter-clockwise, like the reference preset */
+@keyframes rb-spin {
+    to { transform: rotate(-360deg); }
 }
 
 .hero-announce .rb-mark {
@@ -292,8 +310,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-announce-orbit {
-        display: none;
+    .rb-comet {
+        animation: none;
     }
 }
 

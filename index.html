@@ -227,23 +227,14 @@
         <div class="hero-stage" id="heroStage" aria-hidden="true"></div> -->
 
         <a class="hero-announce" id="heroAnnounce" href="/insights/post/breez-ai-rebrands-as-everyaisle-and-expands-its-ai-personalization-platform/">
-        <!-- Orbit: a soft aqua beam travelling the border at a steady speed.
-             Rect geometry is fitted to the pill by the script below. -->
-        <svg class="hero-announce-orbit" aria-hidden="true" focusable="false">
-          <defs><filter id="rbGlow" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
-          <rect class="rb-beam rb-beam--ring" pathLength="100"/>
-          <rect class="rb-beam rb-beam--glow" pathLength="100" filter="url(#rbGlow)"/>
-          <rect class="rb-beam" style="--rb-len: 24" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 20" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 16.5" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 13.5" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 11" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 8.5" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 6.5" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 4.5" pathLength="100"/>
-          <rect class="rb-beam" style="--rb-len: 3" pathLength="100"/>
-          <rect class="rb-beam rb-beam--head" pathLength="100"/>
-        </svg>
+        <!-- Orbit border (after Originkit's orbit-border-button): a 1px ring
+             masked out of the pill's edge, with a spinning conic comet behind it. -->
+        <span class="rb-band" aria-hidden="true">
+          <span class="rb-comet">
+            <span class="rb-comet-glow"></span>
+            <span class="rb-comet-core"></span>
+          </span>
+        </span>
         <img src="/content/banner-breez-mark.png" alt="" class="rb-mark rb-mark--breez" width="20" height="20">
         <span class="rb-word">Breez AI</span>
         <span class="rb-word">is now</span>
@@ -873,25 +864,13 @@
         setBannerDocked(docked);
       }
     };
-    // Fit the orbit's rects to the pill so the beam runs exactly on its border
+    // Size the orbit's comet layer to the pill's diagonal, so the spinning
+    // square always covers the whole ring
     (() => {
-      const svg = heroAnnounce && heroAnnounce.querySelector('.hero-announce-orbit');
-      if (!svg) return;
-      const PAD = 6; // room around the pill for the glow
+      if (!heroAnnounce || !heroAnnounce.querySelector('.rb-comet')) return;
       const fit = () => {
-        const w = heroAnnounce.offsetWidth;
-        const h = heroAnnounce.offsetHeight;
-        const r = parseFloat(getComputedStyle(heroAnnounce).borderTopLeftRadius) || 12;
-        svg.setAttribute('width', w + PAD * 2);
-        svg.setAttribute('height', h + PAD * 2);
-        svg.setAttribute('viewBox', `0 0 ${w + PAD * 2} ${h + PAD * 2}`);
-        svg.querySelectorAll('rect').forEach((rect) => {
-          rect.setAttribute('x', PAD + 0.75);
-          rect.setAttribute('y', PAD + 0.75);
-          rect.setAttribute('width', Math.max(0, w - 1.5));
-          rect.setAttribute('height', Math.max(0, h - 1.5));
-          rect.setAttribute('rx', Math.max(0, r - 0.75));
-        });
+        const side = Math.ceil(Math.hypot(heroAnnounce.offsetWidth, heroAnnounce.offsetHeight) * 1.02);
+        heroAnnounce.style.setProperty('--rb-comet-size', side + 'px');
       };
       fit();
       if (window.ResizeObserver) new ResizeObserver(fit).observe(heroAnnounce);
