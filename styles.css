@@ -176,7 +176,7 @@ body {
     position: relative;
     isolation: isolate;
     box-sizing: border-box;
-    height: 40px;
+    height: 44px;
     gap: 6px;
     padding: 0 12px;
     margin-bottom: 12px;
@@ -245,24 +245,41 @@ body {
     stroke-dashoffset: calc(var(--rb-len) - var(--rb-p));
 }
 
-/* Nine short-to-long dashes at low opacity overlap into a smooth fade:
-   bright at the head, thinning out along the tail. */
-.rb-beam { opacity: 0.17; }
-.rb-beam--glow { --rb-len: 14; stroke-width: 4; opacity: 0.3; }
+/* Nine short-to-long dashes at low opacity overlap into a faint, smooth
+   tail; a short, thicker, fully opaque head with its own glow leads it. */
+.rb-beam { opacity: 0.09; }
+.rb-beam--head { --rb-len: 2.6; stroke-width: 2.25; opacity: 1; }
+.rb-beam--glow { --rb-len: 5; stroke-width: 6; opacity: 0.75; }
+
+/* Hover: a solid ring grows backwards from the head until it wraps the
+   whole border, and shrinks back on the way out. */
+@property --rb-ring {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+}
+
+.rb-beam--ring {
+    --rb-len: var(--rb-ring);
+    stroke-linecap: butt; /* a zero-length dash with round caps would leave a dot */
+    opacity: 0.85;
+}
 
 @keyframes rb-lap {
     to { --rb-p: 100; }
 }
 
-/* Hover: the beam keeps its pace; the border softly lights up all round,
-   the pill firms up to white, and the two marks straighten up. */
+/* Hover: the beam's ring wraps the whole border (above), the pill firms up
+   to white, and the two marks straighten up. */
 .hero-announce {
-    transition: box-shadow 0.5s ease, background-color 0.5s ease, translate 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    --rb-ring: 0;
+    transition: box-shadow 0.5s ease, background-color 0.5s ease, translate 0.5s cubic-bezier(0.22, 1, 0.36, 1), --rb-ring 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .hero-announce:hover {
+    --rb-ring: 100;
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.55), 0 4px 14px rgba(97, 197, 229, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.18), 0 4px 14px rgba(97, 197, 229, 0.16);
     translate: 0 -1px;
 }
 
