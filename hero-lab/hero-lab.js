@@ -1124,6 +1124,146 @@
   };
 
   // ---------------------------------------------------------------
+  // Rebrand pill designs. ?pill=shader swaps the orbit pill for a single
+  // line of white text on a slow WebGL flow of teal and aqua with a glint
+  // of gold. Without WebGL the CSS gradient under the canvas shows instead.
+  // ---------------------------------------------------------------
+  const announce = document.getElementById('heroAnnounce');
+  const PILL_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  const PILL_FRAG = `
+    precision mediump float;
+    uniform vec2 uRes;
+    uniform float uTime;
+    const vec3 TEAL = vec3(0.090, 0.561, 0.682);
+    const vec3 AQUA = vec3(0.380, 0.773, 0.898);
+    const vec3 GOLD = vec3(0.957, 0.714, 0.259);
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float noise(vec2 p) {
+      vec2 i = floor(p), f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x),
+                 mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+    }
+    // soft round glow centered on c (pill-height units)
+    float blob(vec2 p, vec2 c, float r) { vec2 d = p - c; return exp(-dot(d, d) / (r * r)); }
+    void main() {
+      // pill-height units, so the blobs keep their shape at any width
+      float A = uRes.x / uRes.y;
+      vec2 p = gl_FragCoord.xy / uRes.y;
+      float t = uTime;
+      // a little noise warp so the edges stay liquid rather than round
+      p += (vec2(noise(p * 1.3 + t * 0.5), noise(p * 1.3 - t * 0.4 + 7.0)) - 0.5) * 0.7;
+      // aqua and gold glows drift back and forth across a teal pill on
+      // unrelated periods, so the mix never repeats and all three stay in play
+      float a1 = blob(p, vec2(A * (0.5 + 0.48 * sin(t * 0.61 + 2.0)), 0.5 + 0.5 * sin(t * 0.9)), 1.5);
+      float a2 = blob(p, vec2(A * (0.5 + 0.48 * sin(t * 0.47 + 4.4)), 0.5 + 0.5 * cos(t * 0.7)), 1.3);
+      float g = blob(p, vec2(A * (0.5 + 0.5 * sin(t * 0.8)), 0.5 + 0.45 * sin(t * 1.1 + 1.0)), 0.95);
+      vec3 col = mix(TEAL, AQUA, clamp(a1 + a2, 0.0, 1.0) * 0.9);
+      col = mix(col, GOLD, g * 0.9);
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+
+  const mountPillShader = () => {
+    document.body.classList.add('hl-pill-shader');
+    const off = () => document.body.classList.remove('hl-pill-shader');
+    const canvas = el('canvas', 'hl-pill-canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
+    if (!gl) return off;
+
+    const shader = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return s;
+    };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, PILL_VERT));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, PILL_FRAG));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return off;
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uRes = gl.getUniformLocation(prog, 'uRes');
+    const uTime = gl.getUniformLocation(prog, 'uTime');
+    announce.prepend(canvas);
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(announce.offsetWidth * dpr));
+      canvas.height = Math.max(1, Math.round(announce.offsetHeight * dpr));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+    };
+    const ro = new ResizeObserver(resize);
+    ro.observe(announce);
+    resize();
+
+    // Slow drift; hovering eases the flow a little faster
+    let phase = Math.random() * 20;
+    let speed = 1;
+    let target = 1;
+    let prev = 0;
+    let raf = 0;
+    let inView = true;
+    const onEnter = () => { target = 2.4; };
+    const onLeave = () => { target = 1; };
+    announce.addEventListener('pointerenter', onEnter);
+    announce.addEventListener('pointerleave', onLeave);
+    const io = new IntersectionObserver(([e]) => { inView = e.isIntersecting; });
+    io.observe(announce);
+
+    const draw = () => {
+      gl.uniform1f(uTime, phase);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    const tick = (now) => {
+      raf = requestAnimationFrame(tick);
+      const dt = prev ? Math.min(50, now - prev) / 1000 : 0;
+      prev = now;
+      if (!inView || document.hidden) return;
+      speed += (target - speed) * (1 - Math.exp(-dt * 3));
+      phase += dt * 0.3 * speed;
+      draw();
+    };
+    if (reduceMotion) draw(); else raf = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      io.disconnect();
+      announce.removeEventListener('pointerenter', onEnter);
+      announce.removeEventListener('pointerleave', onLeave);
+      canvas.remove();
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      off();
+    };
+  };
+
+  const PILLS = [
+    { key: 'orbit', label: 'Orbit', mount: null },
+    { key: 'shader', label: 'Shader', mount: mountPillShader }
+  ];
+  let pillOff = null;
+  let pillKey = 'orbit';
+
+  const setPill = (key) => {
+    const next = PILLS.find((v) => v.key === key) || PILLS[0];
+    if (pillOff) { pillOff(); pillOff = null; }
+    pillKey = next.key;
+    if (next.mount && announce) pillOff = next.mount();
+    bar.querySelectorAll('[data-pill]').forEach((b) => b.classList.toggle('is-active', b.dataset.pill === pillKey));
+    const p = new URLSearchParams(location.search);
+    if (pillKey === 'orbit') p.delete('pill'); else p.set('pill', pillKey);
+    const q = p.toString();
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+  };
+
+  // ---------------------------------------------------------------
   // Switcher
   // ---------------------------------------------------------------
   const VARIANTS = [
@@ -1172,6 +1312,14 @@
     b.addEventListener('click', () => activate(v.key));
     bar.append(b);
   });
+  bar.append(el('span', 'hl-switcher-sep'), el('span', 'hl-switcher-label', 'Pill'));
+  PILLS.forEach((v) => {
+    const b = el('button', '', v.label);
+    b.type = 'button';
+    b.dataset.pill = v.key;
+    b.addEventListener('click', () => setPill(v.key));
+    bar.append(b);
+  });
   document.body.append(bar);
 
   document.addEventListener('keydown', (e) => {
@@ -1182,4 +1330,5 @@
 
   document.body.classList.add('hl-focus');
   activate(params.get('hero') || 'current');
+  setPill(params.get('pill') || 'orbit');
 })();

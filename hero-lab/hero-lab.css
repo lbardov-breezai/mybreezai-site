@@ -89,6 +89,47 @@ body.hl-focus #footer-placeholder {
     color: #102A50;
 }
 
+.hl-switcher-sep {
+    flex-shrink: 0;
+    width: 1px;
+    height: 18px;
+    margin: 0 4px 0 6px;
+    background: rgba(255, 255, 255, .2);
+}
+
+/* ---------- Rebrand pill: Shader design (?pill=shader) ----------
+   One line of white text on a WebGL flow of teal, aqua and a glint of gold.
+   No marks, stroke, orbit or shadow. The gradient here only shows if WebGL
+   isn't available. */
+body.hl-pill-shader .hero-announce {
+    overflow: hidden;
+    box-shadow: none;
+    background: linear-gradient(110deg, #178FAE 0%, #61C5E5 55%, #178FAE 80%, #F4B642 100%);
+}
+
+body.hl-pill-shader .hero-announce:hover {
+    background: linear-gradient(110deg, #178FAE 0%, #61C5E5 55%, #178FAE 80%, #F4B642 100%);
+}
+
+body.hl-pill-shader .hero-announce .rb-band,
+body.hl-pill-shader .hero-announce .rb-mark {
+    display: none;
+}
+
+body.hl-pill-shader .hero-announce .rb-word {
+    color: #fff;
+}
+
+.hl-pill-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
 /* =====================================================
    A · PATH — a shopper's route drawn through the hero
    ===================================================== */
