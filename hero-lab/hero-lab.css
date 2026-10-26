@@ -102,7 +102,7 @@ body.hl-focus #footer-placeholder {
    No marks, stroke, orbit or shadow. The gradient here only shows if WebGL
    isn't available. */
 body.hl-pill-shader .hero-announce {
-    height: 40px;
+    height: 37px;
     overflow: hidden;
     box-shadow: none;
     background: linear-gradient(110deg, #178FAE 0%, #61C5E5 55%, #178FAE 80%, #F4B642 100%);
