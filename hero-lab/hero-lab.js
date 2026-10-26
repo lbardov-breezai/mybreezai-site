@@ -1137,29 +1137,25 @@
     const vec3 TEAL = vec3(0.090, 0.561, 0.682);
     const vec3 AQUA = vec3(0.380, 0.773, 0.898);
     const vec3 GOLD = vec3(0.957, 0.714, 0.259);
-    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-    float noise(vec2 p) {
-      vec2 i = floor(p), f = fract(p);
-      vec2 u = f * f * (3.0 - 2.0 * f);
-      return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x),
-                 mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
-    }
-    // soft round glow centered on c (pill-height units)
-    float blob(vec2 p, vec2 c, float r) { vec2 d = p - c; return exp(-dot(d, d) / (r * r)); }
     void main() {
-      // pill-height units, so the blobs keep their shape at any width
-      float A = uRes.x / uRes.y;
+      // pill-height units, so the pattern keeps its shape at any width
       vec2 p = gl_FragCoord.xy / uRes.y;
       float t = uTime;
-      // a little noise warp so the edges stay liquid rather than round
-      p += (vec2(noise(p * 1.3 + t * 0.5), noise(p * 1.3 - t * 0.4 + 7.0)) - 0.5) * 0.7;
-      // aqua and gold glows drift back and forth across a teal pill on
-      // unrelated periods, so the mix never repeats and all three stay in play
-      float a1 = blob(p, vec2(A * (0.5 + 0.48 * sin(t * 0.61 + 2.0)), 0.5 + 0.5 * sin(t * 0.9)), 1.5);
-      float a2 = blob(p, vec2(A * (0.5 + 0.48 * sin(t * 0.47 + 4.4)), 0.5 + 0.5 * cos(t * 0.7)), 1.3);
-      float g = blob(p, vec2(A * (0.5 + 0.5 * sin(t * 0.8)), 0.5 + 0.45 * sin(t * 1.1 + 1.0)), 0.95);
-      vec3 col = mix(TEAL, AQUA, clamp(a1 + a2, 0.0, 1.0) * 0.9);
-      col = mix(col, GOLD, g * 0.9);
+      // marbling: fold the plane through a few rounds of sine warps, so the
+      // bands curl and wrap around each other like stirred paint
+      vec2 q = vec2(p.x * 0.6, p.y * 1.3);
+      for (int i = 1; i < 5; i++) {
+        float f = float(i);
+        q += vec2(0.6 / f * sin(f * q.y * 1.7 + t * 0.9 + f * 1.3),
+                  0.5 / f * cos(f * q.x * 2.0 - t * 0.7 + f * 2.1));
+      }
+      // teal and aqua marble into each other along the warped field...
+      float s = 0.5 + 0.5 * sin(q.x * 1.1 + q.y * 0.8 + t * 0.15);
+      vec3 col = mix(TEAL, AQUA, smoothstep(0.1, 0.9, s));
+      // ...and gold threads through as ribbons on a crossing band. Its edges
+      // stay short, since blue and gold blended over a wide edge turn olive.
+      float gs = 0.5 + 0.5 * sin(q.y * 1.6 - q.x * 0.9 + t * 0.2 + 1.0);
+      col = mix(col, GOLD, smoothstep(0.84, 0.97, gs));
       gl_FragColor = vec4(col, 1.0);
     }`;
 
