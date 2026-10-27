@@ -98,27 +98,39 @@ body.hl-focus #footer-placeholder {
 }
 
 /* ---------- Rebrand pill: Shader design (?pill=shader) ----------
-   One line of white text on a WebGL flow of teal, aqua and a glint of gold.
-   No marks, stroke, orbit or shadow. The gradient here only shows if WebGL
-   isn't available. */
+   One line of white text on a WebGL flow of teal, aqua and a ribbon of gold.
+   No marks, stroke, orbit or shadow. The fixed bar above the navbar and the
+   clone flying between them wear the same design. The gradient here only
+   shows if WebGL isn't available. */
 body.hl-pill-shader .hero-announce {
     height: 37px;
+}
+
+body.hl-pill-shader .hero-announce,
+body.hl-pill-shader .top-banner,
+body.hl-pill-shader .banner-flyer {
+    isolation: isolate;
     overflow: hidden;
-    box-shadow: none;
-    background: linear-gradient(110deg, #178FAE 0%, #61C5E5 55%, #178FAE 80%, #F4B642 100%);
+    box-shadow: none !important;
+    background: linear-gradient(110deg, #157C98 0%, #4FA9C8 55%, #157C98 80%, #D9A040 100%);
 }
 
-body.hl-pill-shader .hero-announce:hover {
-    background: linear-gradient(110deg, #178FAE 0%, #61C5E5 55%, #178FAE 80%, #F4B642 100%);
+body.hl-pill-shader .hero-announce:hover,
+body.hl-pill-shader .top-banner:hover {
+    background: linear-gradient(110deg, #157C98 0%, #4FA9C8 55%, #157C98 80%, #D9A040 100%);
 }
 
-body.hl-pill-shader .hero-announce .rb-band,
-body.hl-pill-shader .hero-announce .rb-mark {
+body.hl-pill-shader .rb-band,
+body.hl-pill-shader .rb-mark {
     display: none;
 }
 
-body.hl-pill-shader .hero-announce .rb-word {
+/* Legibility: semibold, plus a soft navy halo that only shows where the
+   flow behind a letter runs light */
+body.hl-pill-shader .rb-word {
     color: #fff;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(16, 42, 80, 0.35), 0 0 8px rgba(16, 42, 80, 0.3);
 }
 
 .hl-pill-canvas {

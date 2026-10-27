@@ -1125,10 +1125,13 @@
 
   // ---------------------------------------------------------------
   // Rebrand pill designs. ?pill=shader swaps the orbit pill for a single
-  // line of white text on a slow WebGL flow of teal and aqua with a glint
-  // of gold. Without WebGL the CSS gradient under the canvas shows instead.
+  // line of white text on a slow WebGL flow of teal and aqua with a ribbon
+  // of gold. The same flow follows it into the fixed bar above the navbar
+  // (and the clone that flies between them). Without WebGL the CSS gradient
+  // under the canvas shows instead.
   // ---------------------------------------------------------------
   const announce = document.getElementById('heroAnnounce');
+  const topBar = document.getElementById('topBanner');
   const PILL_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   const PILL_FRAG = `
     precision mediump float;
@@ -1137,36 +1140,37 @@
     const vec3 TEAL = vec3(0.090, 0.561, 0.682);
     const vec3 AQUA = vec3(0.380, 0.773, 0.898);
     const vec3 GOLD = vec3(0.957, 0.714, 0.259);
+    const vec3 NAVY = vec3(0.063, 0.165, 0.314);
     void main() {
-      // pill-height units, so the pattern keeps its shape at any width
-      vec2 p = gl_FragCoord.xy / uRes.y;
+      // The pattern is laid out across a fixed 6.5:1 frame, the pill's own
+      // shape, so the bar and the flying clone show the same flow stretched
+      // rather than repeated
+      vec2 p = vec2(gl_FragCoord.x / uRes.x * 6.5, gl_FragCoord.y / uRes.y);
       float t = uTime;
-      // marbling: fold the plane through a few rounds of sine warps, so the
-      // bands curl and wrap around each other like stirred paint
-      vec2 q = vec2(p.x * 0.6, p.y * 1.3);
-      for (int i = 1; i < 5; i++) {
+      // two gentle sine warps: soft, wide bands that lean into each other
+      vec2 q = vec2(p.x * 0.45, p.y * 0.9);
+      for (int i = 1; i < 3; i++) {
         float f = float(i);
-        q += vec2(0.6 / f * sin(f * q.y * 1.7 + t * 0.9 + f * 1.3),
-                  0.5 / f * cos(f * q.x * 2.0 - t * 0.7 + f * 2.1));
+        q += vec2(0.35 / f * sin(f * q.y * 1.2 + t * 0.6 + f * 1.3),
+                  0.3 / f * cos(f * q.x * 1.4 - t * 0.5 + f * 2.1));
       }
-      // teal and aqua marble into each other along the warped field...
-      float s = 0.5 + 0.5 * sin(q.x * 1.1 + q.y * 0.8 + t * 0.15);
-      vec3 col = mix(TEAL, AQUA, smoothstep(0.1, 0.9, s));
-      // ...and gold threads through as ribbons on a crossing band. Its edges
-      // stay short, since blue and gold blended over a wide edge turn olive.
-      float gs = 0.5 + 0.5 * sin(q.y * 1.6 - q.x * 0.9 + t * 0.2 + 1.0);
-      col = mix(col, GOLD, smoothstep(0.84, 0.97, gs));
+      float s = 0.5 + 0.5 * sin(q.x * 0.9 + q.y * 0.5 + t * 0.12);
+      vec3 col = mix(TEAL, AQUA, smoothstep(0.1, 0.9, s) * 0.85);
+      // a light navy veil deepens the blues so the white text holds up
+      col = mix(col, NAVY, 0.12);
+      // one thin gold thread on a crossing band, kept bright; short edges,
+      // since blue and gold blended over a wide edge turn olive
+      float gs = 0.5 + 0.5 * sin(q.y * 1.6 - q.x * 1.6 + t * 0.18 + 1.0);
+      col = mix(col, GOLD, smoothstep(0.88, 0.97, gs) * 0.95);
       gl_FragColor = vec4(col, 1.0);
     }`;
 
-  const mountPillShader = () => {
-    document.body.classList.add('hl-pill-shader');
-    const off = () => document.body.classList.remove('hl-pill-shader');
+  // One shader canvas behind a host element's content
+  const shaderLayer = (host) => {
     const canvas = el('canvas', 'hl-pill-canvas');
     canvas.setAttribute('aria-hidden', 'true');
     const gl = canvas.getContext('webgl', { antialias: false, alpha: false });
-    if (!gl) return off;
-
+    if (!gl) return null;
     const shader = (type, src) => {
       const s = gl.createShader(type);
       gl.shaderSource(s, src);
@@ -1177,7 +1181,7 @@
     gl.attachShader(prog, shader(gl.VERTEX_SHADER, PILL_VERT));
     gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, PILL_FRAG));
     gl.linkProgram(prog);
-    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return off;
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
     gl.useProgram(prog);
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
@@ -1186,57 +1190,104 @@
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const uRes = gl.getUniformLocation(prog, 'uRes');
     const uTime = gl.getUniformLocation(prog, 'uTime');
-    announce.prepend(canvas);
+    host.prepend(canvas);
 
+    let last = 0;
+    const draw = (phase) => {
+      last = phase;
+      gl.uniform1f(uTime, phase);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    // Resizing clears the canvas, and the observer fires after this frame's
+    // draw, so repaint right away (the flyer resizes every frame)
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, Math.round(announce.offsetWidth * dpr));
-      canvas.height = Math.max(1, Math.round(announce.offsetHeight * dpr));
+      canvas.width = Math.max(1, Math.round(host.offsetWidth * dpr));
+      canvas.height = Math.max(1, Math.round(host.offsetHeight * dpr));
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uRes, canvas.width, canvas.height);
+      draw(last);
     };
     const ro = new ResizeObserver(resize);
-    ro.observe(announce);
+    ro.observe(host);
     resize();
+    return {
+      draw,
+      dispose() {
+        ro.disconnect();
+        canvas.remove();
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
+      }
+    };
+  };
 
-    // Slow drift; hovering eases the flow a little faster
+  const mountPillShader = () => {
+    document.body.classList.add('hl-pill-shader');
+    const pill = shaderLayer(announce);
+    if (!pill) return () => document.body.classList.remove('hl-pill-shader');
+    const bar = topBar && shaderLayer(topBar);
+
+    // The clone that flies between pill and bar is built from the bar's
+    // markup: swap its copied (blank) canvas for a live layer of its own
+    let flyer = null;
+    const mo = new MutationObserver((records) => records.forEach((r) => {
+      r.addedNodes.forEach((n) => {
+        if (!n.classList || !n.classList.contains('banner-flyer')) return;
+        n.querySelector('.hl-pill-canvas')?.remove();
+        if (flyer) flyer.layer?.dispose();
+        flyer = { node: n, layer: shaderLayer(n) };
+        flyer.layer?.draw(phase);
+      });
+      r.removedNodes.forEach((n) => {
+        if (flyer && n === flyer.node) { flyer.layer?.dispose(); flyer = null; }
+      });
+    }));
+    mo.observe(document.body, { childList: true });
+
+    // One clock for all three, so the flow carries on unbroken as the pill
+    // turns into the bar. Slow drift; hovering eases it a little faster.
     let phase = Math.random() * 20;
     let speed = 1;
     let target = 1;
     let prev = 0;
     let raf = 0;
-    let inView = true;
+    let pillInView = true;
     const onEnter = () => { target = 2.4; };
     const onLeave = () => { target = 1; };
-    announce.addEventListener('pointerenter', onEnter);
-    announce.addEventListener('pointerleave', onLeave);
-    const io = new IntersectionObserver(([e]) => { inView = e.isIntersecting; });
+    [announce, topBar].forEach((n) => {
+      if (!n) return;
+      n.addEventListener('pointerenter', onEnter);
+      n.addEventListener('pointerleave', onLeave);
+    });
+    const io = new IntersectionObserver(([e]) => { pillInView = e.isIntersecting; });
     io.observe(announce);
 
-    const draw = () => {
-      gl.uniform1f(uTime, phase);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-    };
     const tick = (now) => {
       raf = requestAnimationFrame(tick);
       const dt = prev ? Math.min(50, now - prev) / 1000 : 0;
       prev = now;
-      if (!inView || document.hidden) return;
+      if (document.hidden) return;
       speed += (target - speed) * (1 - Math.exp(-dt * 3));
-      phase += dt * 0.3 * speed;
-      draw();
+      if (!reduceMotion) phase += dt * 0.25 * speed;
+      if (pillInView) pill.draw(phase);
+      if (bar && topBar.classList.contains('is-shown')) bar.draw(phase);
+      if (flyer && flyer.layer) flyer.layer.draw(phase);
     };
-    if (reduceMotion) draw(); else raf = requestAnimationFrame(tick);
+    raf = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(raf);
-      ro.disconnect();
+      mo.disconnect();
       io.disconnect();
-      announce.removeEventListener('pointerenter', onEnter);
-      announce.removeEventListener('pointerleave', onLeave);
-      canvas.remove();
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
-      off();
+      [announce, topBar].forEach((n) => {
+        if (!n) return;
+        n.removeEventListener('pointerenter', onEnter);
+        n.removeEventListener('pointerleave', onLeave);
+      });
+      pill.dispose();
+      if (bar) bar.dispose();
+      if (flyer) flyer.layer?.dispose();
+      document.body.classList.remove('hl-pill-shader');
     };
   };
 
