@@ -1164,25 +1164,28 @@
                           -0.0041960863, -0.7034186147, 1.7076147010);
       return pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2));
     }
+    // soft elliptical glow centered on c, r wide
+    float glow(vec2 p, vec2 c, float r) { vec2 d = (p - c) / vec2(r, r * 0.6); return exp(-dot(d, d)); }
     void main() {
       // The pattern is laid out across a fixed 6.5:1 frame, the pill's own
       // shape, so the bar and the flying clone show the same flow stretched
       // rather than repeated
       vec2 p = vec2(gl_FragCoord.x / uRes.x * 6.5, gl_FragCoord.y / uRes.y);
       float t = uTime;
-      // two gentle sine warps: soft, wide bands that lean into each other
-      vec2 q = vec2(p.x * 0.45, p.y * 0.9);
-      for (int i = 1; i < 3; i++) {
-        float f = float(i);
-        q += vec2(0.35 / f * sin(f * q.y * 1.2 + t * 0.6 + f * 1.3),
-                  0.3 / f * cos(f * q.x * 1.4 - t * 0.5 + f * 2.1));
-      }
-      // teal and aqua drift into each other...
-      float s = 0.5 + 0.5 * sin(q.x * 0.9 + q.y * 0.5 + t * 0.12);
-      vec3 col = mix(toOklab(TEAL), toOklab(AQUA), smoothstep(0.0, 1.0, s) * 0.85);
-      // ...and gold rises through them as a soft glow with a long falloff
-      float gs = 0.5 + 0.5 * sin(q.y * 1.0 - q.x * 1.1 + t * 0.18 + 1.0);
-      col = mix(col, toOklab(GOLD), pow(gs, 5.0) * 0.95);
+      // a gentle warp keeps the edges liquid
+      p += 0.25 * vec2(sin(p.y * 2.3 + t * 0.7), cos(p.x * 0.9 - t * 0.5));
+      // One glow per color, evenly spaced on a slowly turning loop a little
+      // wider than the pill: they never pile up, all three always show (about
+      // a third each), and they slowly trade places
+      float a = t * 0.12;
+      vec2 cT = vec2(3.25 + 2.6 * cos(a), 0.5 + 0.55 * sin(a));
+      vec2 cA = vec2(3.25 + 2.6 * cos(a + 2.094), 0.5 + 0.55 * sin(a + 2.094));
+      vec2 cG = vec2(3.25 + 2.6 * cos(a + 4.189), 0.5 + 0.55 * sin(a + 4.189));
+      float wT = glow(p, cT, 1.4);
+      float wA = glow(p, cA, 1.3);
+      float wG = glow(p, cG, 1.5);
+      // weighted blend: pure color at each core, long smooth hand-offs between
+      vec3 col = (toOklab(TEAL) * wT + toOklab(AQUA) * wA + toOklab(GOLD) * wG) / (wT + wA + wG + 1e-4);
       // a light navy veil deepens everything so the white text holds up
       col = mix(col, toOklab(NAVY), 0.08);
       gl_FragColor = vec4(fromOklab(col), 1.0);
