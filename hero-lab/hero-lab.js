@@ -1134,13 +1134,36 @@
   const topBar = document.getElementById('topBanner');
   const PILL_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   const PILL_FRAG = `
-    precision mediump float;
+    precision highp float;
     uniform vec2 uRes;
     uniform float uTime;
     const vec3 TEAL = vec3(0.090, 0.561, 0.682);
     const vec3 AQUA = vec3(0.380, 0.773, 0.898);
     const vec3 GOLD = vec3(0.957, 0.714, 0.259);
     const vec3 NAVY = vec3(0.063, 0.165, 0.314);
+    // All blending happens in OKLab, a perceptual space: long gradients stay
+    // even and clean, and blue into gold passes through a soft haze instead
+    // of the olive that a plain RGB mix gives
+    vec3 toOklab(vec3 srgb) {
+      vec3 c = pow(srgb, vec3(2.2));
+      vec3 lms = c * mat3(0.4122214708, 0.5363325363, 0.0514459929,
+                          0.2119034982, 0.6806995451, 0.1073969566,
+                          0.0883024619, 0.2817188376, 0.6299787005);
+      lms = pow(max(lms, 0.0), vec3(1.0 / 3.0));
+      return lms * mat3(0.2104542553, 0.7936177850, -0.0040720468,
+                        1.9779984951, -2.4285922050, 0.4505937099,
+                        0.0259040371, 0.7827717662, -0.8086757660);
+    }
+    vec3 fromOklab(vec3 lab) {
+      vec3 lms = lab * mat3(1.0, 0.3963377774, 0.2158037573,
+                            1.0, -0.1055613458, -0.0638541728,
+                            1.0, -0.0894841775, -1.2914855480);
+      lms = lms * lms * lms;
+      vec3 c = lms * mat3(4.0767416621, -3.3077115913, 0.2309699292,
+                          -1.2684380046, 2.6097574011, -0.3413193965,
+                          -0.0041960863, -0.7034186147, 1.7076147010);
+      return pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2));
+    }
     void main() {
       // The pattern is laid out across a fixed 6.5:1 frame, the pill's own
       // shape, so the bar and the flying clone show the same flow stretched
@@ -1154,15 +1177,15 @@
         q += vec2(0.35 / f * sin(f * q.y * 1.2 + t * 0.6 + f * 1.3),
                   0.3 / f * cos(f * q.x * 1.4 - t * 0.5 + f * 2.1));
       }
+      // teal and aqua drift into each other...
       float s = 0.5 + 0.5 * sin(q.x * 0.9 + q.y * 0.5 + t * 0.12);
-      vec3 col = mix(TEAL, AQUA, smoothstep(0.1, 0.9, s) * 0.85);
-      // a light navy veil deepens the blues so the white text holds up
-      col = mix(col, NAVY, 0.12);
-      // one thin gold thread on a crossing band, kept bright; short edges,
-      // since blue and gold blended over a wide edge turn olive
-      float gs = 0.5 + 0.5 * sin(q.y * 1.6 - q.x * 1.6 + t * 0.18 + 1.0);
-      col = mix(col, GOLD, smoothstep(0.88, 0.97, gs) * 0.95);
-      gl_FragColor = vec4(col, 1.0);
+      vec3 col = mix(toOklab(TEAL), toOklab(AQUA), smoothstep(0.0, 1.0, s) * 0.85);
+      // ...and gold rises through them as a soft glow with a long falloff
+      float gs = 0.5 + 0.5 * sin(q.y * 1.0 - q.x * 1.1 + t * 0.18 + 1.0);
+      col = mix(col, toOklab(GOLD), pow(gs, 5.0) * 0.95);
+      // a light navy veil deepens everything so the white text holds up
+      col = mix(col, toOklab(NAVY), 0.08);
+      gl_FragColor = vec4(fromOklab(col), 1.0);
     }`;
 
   // One shader canvas behind a host element's content
