@@ -144,7 +144,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: 6px;
     padding: 0 20px;
     background: #fff;
     text-decoration: none;
@@ -163,7 +163,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: 6px;
     overflow: hidden;
     white-space: nowrap;
     background: #fff;
@@ -173,12 +173,17 @@ body {
 .hero-announce {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
-    padding: 8px 18px;
+    position: relative;
+    isolation: isolate;
+    box-sizing: border-box;
+    height: 40px;
+    gap: 6px;
+    padding: 0 12px;
     margin-bottom: 12px;
-    border-radius: 100px;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(16, 42, 80, 0.04), 0 2px 6px rgba(16, 42, 80, 0.04);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.6);
+    /* faint aqua track for the orbit to run along */
+    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.18);
     text-decoration: none;
     opacity: 0;
     transform: translateY(-14px);
@@ -190,8 +195,124 @@ body {
     animation: short-slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+
+
+/* Rebrand pill content (Figma: Creative 2.09, node 136:3005): the words and
+   both marks sit in one row, shared by the hero pill and the fixed bar. */
+.rb-word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 18px;
+    color: #102A50;
+    white-space: nowrap;
+}
+
+.rb-mark {
+    display: block;
+    flex-shrink: 0;
+}
+
+.rb-mark--breez { transform: rotate(-8deg); }
+.rb-mark--everyaisle { transform: rotate(8deg); }
+
+/* Orbit border, after Originkit's orbit-border-button. .rb-band is a 1px
+   ring masked out of the pill's edge. Behind it, .rb-comet is a square as
+   wide as the pill's diagonal, spinning at a slow constant 45deg/s; it carries a
+   conic comet (solid head, fading tail) drawn twice: blurred for the glow
+   and at 45% for the core. Hovering grows the arc to the full 360deg. */
+@property --rb-arc {
+    syntax: '<angle>';
+    inherits: true;
+    initial-value: 108deg;
+}
+
+@property --rb-solid {
+    syntax: '<angle>';
+    inherits: true;
+    initial-value: 32.4deg;
+}
+
+.hero-announce {
+    --rb-arc: 108deg;      /* 30% of the ring */
+    --rb-solid: 32.4deg;   /* arc^2 / 360: the fully solid head */
+    transition:
+        box-shadow 0.5s ease,
+        background-color 0.5s ease,
+        scale 0.6s cubic-bezier(0.44, 0, 0.56, 1),
+        --rb-arc 0.45s cubic-bezier(0.33, 1, 0.68, 1),
+        --rb-solid 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
 .hero-announce:hover {
-    box-shadow: 0 1px 2px rgba(16, 42, 80, 0.05), 0 3px 10px rgba(16, 42, 80, 0.07);
+    --rb-arc: 360deg;
+    --rb-solid: 360deg;
+    scale: 1.04;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.hero-announce:hover:active {
+    scale: 1.01; /* 1.04 x 0.97 press */
+}
+
+.rb-band {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    padding: 1.5px;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    -webkit-mask-clip: border-box, content-box;
+    -webkit-mask-composite: xor;
+    mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    mask-clip: border-box, content-box;
+    mask-composite: exclude;
+}
+
+.rb-comet {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--rb-comet-size, 320px);
+    height: var(--rb-comet-size, 320px);
+    margin-top: calc(var(--rb-comet-size, 320px) / -2);
+    margin-left: calc(var(--rb-comet-size, 320px) / -2);
+    animation: rb-spin 8s linear infinite; /* calmer than the reference's 3.3s lap */
+}
+
+.rb-comet-glow,
+.rb-comet-core {
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(from 0deg,
+            #61C5E5 0deg,
+            #61C5E5 var(--rb-solid),
+            rgba(97, 197, 229, 0) var(--rb-arc),
+            rgba(97, 197, 229, 0) 360deg);
+}
+
+.rb-comet-glow { filter: blur(13px); }
+.rb-comet-core { opacity: 0.9; } /* reference uses 0.45 on black; a light page needs more */
+
+/* counter-clockwise, like the reference preset */
+@keyframes rb-spin {
+    to { transform: rotate(-360deg); }
+}
+
+.hero-announce .rb-mark {
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hero-announce:hover .rb-mark {
+    transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rb-comet {
+        animation: none;
+    }
 }
 
 .top-banner:hover {
@@ -262,22 +383,20 @@ body.has-top-banner .header {
 @media (max-width: 600px) {
     /* One row, like desktop, just a touch tighter so it fits small phones */
     .hero-announce {
-        gap: 10px;
-        padding: 8px 14px;
-    }
-
-    .banner-flyer {
-        gap: 10px;
+        gap: 5px;
     }
 
     .top-banner {
-        gap: 10px;
+        gap: 5px;
         padding: 0 14px;
     }
 
-    .top-banner-text {
+    .banner-flyer {
+        gap: 5px;
+    }
+
+    .rb-word {
         font-size: 13px;
-        white-space: nowrap;
     }
 
     body.has-top-banner .mobile-menu {
@@ -688,6 +807,30 @@ body.has-top-banner .header {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+/* 3D grocery aisle behind the hero copy (hero-lab/src/aisle3d.js, mounted
+   from index.html). Full-bleed, reaching up behind the navbar; the module's
+   own veil keeps the copy clear and fades into the cream page below. */
+.hero {
+    position: relative;
+    isolation: isolate;
+}
+
+.hero-content {
+    z-index: 2;
+}
+
+.hero-aisle {
+    position: absolute;
+    top: calc(-1rem - 80px);
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
 }
 
 .hero-stage {
@@ -1386,6 +1529,28 @@ body.has-top-banner .header {
 /* Gentle continuous float, independent of the tilt/hover transform on .suite-visual itself */
 .suite-visual-float {
     animation: suite-visual-float 5s ease-in-out infinite;
+}
+
+/* 3D puzzle pieces: hero-lab/src/suite3d.js swaps the CSS pieces for a
+   three.js canvas once it loads (561px and up); without WebGL the CSS
+   pieces stay. */
+.suite-visual-float.suite-3d {
+    animation: none;
+}
+
+.suite-visual-float.suite-3d .suite-visual {
+    display: none;
+}
+
+.suite-3d-canvas {
+    display: block;
+    width: min(760px, 100%);
+    height: 230px;
+    /* the canvas keeps room for the float, tilt and shadow; let that room
+       overlap the header's bottom margin instead of adding to it */
+    margin: -40px auto 16px;
+    cursor: pointer;
+    touch-action: pan-y;
 }
 
 @keyframes suite-visual-float {
