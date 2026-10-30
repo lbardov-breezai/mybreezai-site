@@ -1,9 +1,10 @@
 // Suite section: the three product pieces as real 3D puzzle pieces.
 // Each piece is an extruded shape with a knob on the right and a matching
 // notch on the left, so when they slide together the knobs seat in the
-// notches. At rest they float apart at their own tilts; the first hover
-// snaps them together (and they stay that way), click toggles. Falls back to
-// the existing CSS pieces when WebGL isn't available.
+// notches. They float apart at their own tilts until the set scrolls to the
+// middle of the screen, then snap together; once the set is fully off-screen
+// they come apart again, so every pass replays it. Click toggles. Falls back
+// to the existing CSS pieces when WebGL isn't available.
 import {
   CanvasTexture, Color, DirectionalLight, ExtrudeGeometry, Group, HemisphereLight, Mesh,
   MeshBasicMaterial, MeshPhysicalMaterial, NoToneMapping, PerspectiveCamera, PlaneGeometry,
@@ -174,8 +175,30 @@ export async function mountSuite3D(float) {
     merged = on;
     if (on) snapAt = -1;
   };
-  canvas.addEventListener('pointerenter', () => setMerged(true));
   canvas.addEventListener('click', () => setMerged(!merged));
+
+  // Snap together when the set reaches the middle of the screen: its center
+  // within the middle 30% of the viewport, or crossing the midline between
+  // two frames on a fast scroll
+  let lastSide = 0;
+  const checkMiddle = () => {
+    if (merged) return;
+    const r = canvas.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const offset = r.top + r.height / 2 - vh / 2;
+    const side = Math.sign(offset);
+    if (Math.abs(offset) < vh * 0.15 || (lastSide && side && side !== lastSide)) setMerged(true);
+    lastSide = side;
+  };
+  // Fully off-screen: pull the pieces apart again, out of sight, for the
+  // next pass
+  const resetIo = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) return;
+    merged = false;
+    mergeK = 0;
+    lastSide = 0;
+  });
+  resetIo.observe(canvas);
   canvas.addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect();
     tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
@@ -199,6 +222,7 @@ export async function mountSuite3D(float) {
     prev = now;
     const t = now / 1000;
 
+    checkMiddle();
     // ease toward the target state; a soft spring on the way in
     const target = merged ? 1 : 0;
     mergeK += (target - mergeK) * (1 - Math.exp(-dt * 7));
@@ -251,6 +275,7 @@ export async function mountSuite3D(float) {
     dispose() {
       cancelAnimationFrame(raf);
       io.disconnect();
+      resetIo.disconnect();
       window.removeEventListener('resize', resize);
       renderer.dispose();
       canvas.remove();
