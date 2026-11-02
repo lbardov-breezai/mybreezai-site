@@ -1797,7 +1797,8 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    margin-bottom: 3rem;
+    max-width: 760px; /* same width as the partner note below */
+    margin: 0 auto 1.5rem; /* bottom gap matches the column gap */
 }
 
 .groceryaisle-success-card {
@@ -2458,6 +2459,7 @@
     .groceryaisle-success-cards {
         grid-template-columns: 1fr;
         gap: 1rem;
+        margin-bottom: 1rem;
     }
 
     .groceryaisle-success-partner-note {
