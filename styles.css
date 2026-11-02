@@ -1425,7 +1425,7 @@ body.has-top-banner .header {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
 }
 
@@ -1433,11 +1433,23 @@ body.has-top-banner .header {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    /* three cards in two columns: center the last one on its own row */
+    .stats-grid .stat-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc(50% - 1rem);
+    }
 }
 
 @media (max-width: 500px) {
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .stats-grid .stat-card:last-child:nth-child(odd) {
+        width: auto;
+        justify-self: stretch;
     }
 }
 
