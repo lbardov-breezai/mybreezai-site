@@ -150,7 +150,7 @@ body {
 .rebrand-bar-inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 16px 2rem;
+    padding: 12px 2rem;
     display: grid;
     /* Equal side columns keep the text block centered on the screen, in
        line with the navbar; the copy is capped so the sides always fit */
@@ -163,7 +163,7 @@ body {
     justify-self: start;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Logos and arrow shown in white on the navy bar (deliberate exception to
@@ -175,18 +175,20 @@ body {
 
 .rebrand-bar-logo--breez {
     display: block;
-    height: 30px;
+    height: 22px;
     width: auto;
 }
 
 .rebrand-bar-logo--everyaisle {
     display: block;
-    width: 160px; /* brand minimum for the horizontal lockup */
+    width: 118px;
     height: auto;
 }
 
 .rebrand-bar-arrow {
     display: block;
+    width: 16px;
+    height: auto;
     flex-shrink: 0;
     color: #fff;
 }
@@ -196,8 +198,8 @@ body {
 }
 
 .rebrand-bar-label {
-    display: block;
-    margin-bottom: 4px;
+    display: inline;
+    margin-right: 4px;
     font-family: 'Inter', sans-serif;
     font-size: 12px;
     font-weight: 600;
@@ -222,12 +224,12 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 9px 16px;
     border-radius: 8px;
     background: #F4B642;
     color: #102A50;
     font-family: 'Inter', sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
