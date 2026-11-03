@@ -200,12 +200,7 @@ body {
 
 .rebrand-bar-label {
     display: inline;
-    margin-right: 4px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    line-height: 1.4;
+    /* Same type as the message (inherited); only the color differs */
     text-transform: uppercase;
     color: #61C5E5;
 }
