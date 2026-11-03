@@ -137,6 +137,7 @@ body {
     position: relative;
     z-index: 3; /* above the hero aisle, which reaches up behind it */
     margin-top: var(--header-h);
+    padding: 0 2rem; /* same side padding and 1400px content width as the navbar */
     background: #102A50;
     color: #fff;
     opacity: 0;
@@ -150,7 +151,7 @@ body {
 .rebrand-bar-inner {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 12px 2rem;
+    padding: 12px 0;
     display: grid;
     /* Equal side columns keep the text block centered on the screen, in
        line with the navbar; the copy is capped so the sides always fit */
@@ -263,7 +264,7 @@ body {
     .rebrand-bar-inner {
         grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 20px;
-        padding: 14px 1.25rem;
+        padding: 14px 0;
     }
 
     .rebrand-bar-copy {
@@ -286,7 +287,7 @@ body {
         grid-template-columns: 1fr;
         justify-items: center;
         gap: 12px;
-        padding: 16px;
+        padding: 16px 0;
     }
 
     .rebrand-bar-logos,
