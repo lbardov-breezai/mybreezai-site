@@ -176,13 +176,13 @@ body {
 
 .rebrand-bar-logo--breez {
     display: block;
-    height: 22px;
+    height: 25px;
     width: auto;
 }
 
 .rebrand-bar-logo--everyaisle {
     display: block;
-    width: 86px;
+    width: 98px;
     height: auto;
 }
 
@@ -300,7 +300,7 @@ body {
     }
 
     .rebrand-bar-logo--breez {
-        height: 22px;
+        height: 25px;
     }
 
 }
