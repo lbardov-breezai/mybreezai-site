@@ -125,282 +125,153 @@ body.intro-active {
     margin: 0 !important;
 }
 
-/* Homepage rebrand announcement. At the top of the page it is a pill above the
-   hero H1 (.hero-announce). Once that pill scrolls away, JS adds
-   body.has-top-banner: the fixed bar below takes over above the navbar and the
-   navbar shifts down by its height. */
+/* Homepage rebrand bar: full-width navy strip directly under the fixed navbar.
+   It sits in the page flow (scrolls away with the hero). Left: the old and new
+   logos in a white container (logos never sit directly on navy). Center: the
+   news. Right: a gold "Learn more" button, the bar's single accent. */
 body {
-    --top-banner-height: 40px;
+    --header-h: 85px; /* overwritten from the header's real height in index.html */
 }
 
-.top-banner {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1001;
-    box-sizing: border-box;
-    height: var(--top-banner-height);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 0 20px;
-    background: #fff;
-    text-decoration: none;
-    visibility: hidden;
-}
-
-.top-banner.is-shown {
-    visibility: visible;
-}
-
-/* Clone that flies between the hero pill and the fixed bar (see flyBanner). */
-.banner-flyer {
-    position: fixed;
-    z-index: 1003;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    overflow: hidden;
-    white-space: nowrap;
-    background: #fff;
-    pointer-events: none;
-}
-
-.hero-announce {
-    display: inline-flex;
-    align-items: center;
+.rebrand-bar {
     position: relative;
-    isolation: isolate;
-    box-sizing: border-box;
-    height: 40px;
-    gap: 6px;
-    padding: 0 12px;
-    margin-bottom: 12px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.6);
-    /* faint aqua track for the orbit to run along */
-    box-shadow: inset 0 0 0 1px rgba(97, 197, 229, 0.18);
-    text-decoration: none;
+    z-index: 3; /* above the hero aisle, which reaches up behind it */
+    margin-top: var(--header-h);
+    background: #102A50;
+    color: #fff;
     opacity: 0;
-    transform: translateY(-14px);
-    will-change: transform, opacity;
-    transition: box-shadow 0.2s ease;
+    transform: translateY(-8px);
 }
 
-.hero-announce.visible {
+.rebrand-bar.visible {
     animation: short-slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+.rebrand-bar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 2rem;
+    /* Equal side columns keep the message centered on the bar (and the
+       navbar above it), with the button in the right column */
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+}
 
+/* Message: words with the old and new logomarks inline, each mark in a
+   white bubble since the bar is dark (same row as the earlier pill) */
+.rebrand-bar-text {
+    grid-column: 2;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
 
-/* Rebrand pill content (Figma: Creative 2.09, node 136:3005): the words and
-   both marks sit in one row, shared by the hero pill and the fixed bar. */
-.rb-word {
+.rebrand-bar-word {
     font-family: 'Inter', sans-serif;
+    font-size: 17px;
     font-weight: 500;
-    font-size: 15px;
-    line-height: 18px;
-    color: #102A50;
+    line-height: 1.3;
+    color: #fff;
     white-space: nowrap;
 }
 
-.rb-mark {
-    display: block;
+.rebrand-bar-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #fff;
 }
 
-.rb-mark--breez { transform: rotate(-8deg); }
-.rb-mark--everyaisle { transform: rotate(8deg); }
-
-/* Orbit border, after Originkit's orbit-border-button. .rb-band is a 1px
-   ring masked out of the pill's edge. Behind it, .rb-comet is a square as
-   wide as the pill's diagonal, spinning at a slow constant 45deg/s; it carries a
-   conic comet (solid head, fading tail) drawn twice: blurred for the glow
-   and at 45% for the core. Hovering grows the arc to the full 360deg. */
-@property --rb-arc {
-    syntax: '<angle>';
-    inherits: true;
-    initial-value: 108deg;
+.rebrand-bar-mark {
+    display: block;
 }
 
-@property --rb-solid {
-    syntax: '<angle>';
-    inherits: true;
-    initial-value: 32.4deg;
+.rebrand-bar-mark--breez { transform: rotate(-8deg); }
+.rebrand-bar-mark--everyaisle { transform: rotate(8deg); }
+
+.rebrand-bar-cta {
+    grid-column: 3;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    background: #F4B642;
+    color: #102A50;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.hero-announce {
-    --rb-arc: 108deg;      /* 30% of the ring */
-    --rb-solid: 32.4deg;   /* arc^2 / 360: the fully solid head */
-    transition:
-        box-shadow 0.5s ease,
-        background-color 0.5s ease,
-        scale 0.6s cubic-bezier(0.44, 0, 0.56, 1),
-        --rb-arc 0.45s cubic-bezier(0.33, 1, 0.68, 1),
-        --rb-solid 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+.rebrand-bar-cta svg {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.hero-announce:hover {
-    --rb-arc: 360deg;
-    --rb-solid: 360deg;
-    scale: 1.04;
-    background: rgba(255, 255, 255, 0.95);
+.rebrand-bar-cta:hover {
+    background: #F8C766;
 }
 
-.hero-announce:hover:active {
-    scale: 1.01; /* 1.04 x 0.97 press */
+.rebrand-bar-cta:hover svg {
+    transform: translateX(3px);
 }
 
-.rb-band {
-    position: absolute;
-    inset: 0;
-    box-sizing: border-box;
-    padding: 1.5px;
-    border-radius: inherit;
-    overflow: hidden;
-    pointer-events: none;
-    -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
-    -webkit-mask-clip: border-box, content-box;
-    -webkit-mask-composite: xor;
-    mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
-    mask-clip: border-box, content-box;
-    mask-composite: exclude;
+.rebrand-bar-cta:active {
+    transform: scale(0.97);
 }
 
-.rb-comet {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: var(--rb-comet-size, 320px);
-    height: var(--rb-comet-size, 320px);
-    margin-top: calc(var(--rb-comet-size, 320px) / -2);
-    margin-left: calc(var(--rb-comet-size, 320px) / -2);
-    animation: rb-spin 8s linear infinite; /* calmer than the reference's 3.3s lap */
+.rebrand-bar-cta:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 3px;
 }
 
-.rb-comet-glow,
-.rb-comet-core {
-    position: absolute;
-    inset: 0;
-    background: conic-gradient(from 0deg,
-            #61C5E5 0deg,
-            #61C5E5 var(--rb-solid),
-            rgba(97, 197, 229, 0) var(--rb-arc),
-            rgba(97, 197, 229, 0) 360deg);
-}
+/* Phone: message and button stack, centered */
+@media (max-width: 640px) {
+    .rebrand-bar-inner {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+    }
 
-.rb-comet-glow { filter: blur(13px); }
-.rb-comet-core { opacity: 0.9; } /* reference uses 0.45 on black; a light page needs more */
+    .rebrand-bar-text,
+    .rebrand-bar-cta {
+        grid-column: 1;
+        justify-self: center;
+    }
 
-/* counter-clockwise, like the reference preset */
-@keyframes rb-spin {
-    to { transform: rotate(-360deg); }
-}
+    .rebrand-bar-text {
+        gap: 6px;
+    }
 
-.hero-announce .rb-mark {
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+    .rebrand-bar-word {
+        font-size: 15px;
+    }
 
-.hero-announce:hover .rb-mark {
-    transform: rotate(0deg);
+    .rebrand-bar-bubble {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .rb-comet {
+    .rebrand-bar.visible {
         animation: none;
-    }
-}
-
-.top-banner:hover {
-    background: var(--cream-dark);
-}
-
-.top-banner-marks {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-}
-
-.top-banner-mark {
-    display: block;
-    flex-shrink: 0;
-}
-
-.top-banner-mark--breez {
-    width: 20px;
-    height: 20px;
-    transform: rotate(-8deg);
-}
-
-.top-banner-mark--everyaisle {
-    width: 23px;
-    height: 20px;
-    transform: rotate(8deg);
-}
-
-.top-banner-arrow {
-    display: block;
-    width: 16px;
-    height: 8px;
-    flex-shrink: 0;
-}
-
-.top-banner-text strong {
-    font-weight: 700;
-}
-
-.top-banner-text {
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    font-size: 15px;
-    line-height: 18px;
-    color: #102A50;
-}
-
-body.has-top-banner .header {
-    top: var(--top-banner-height);
-}
-
-/* While the navbar slides down (or back up) the bar isn't in place yet.
-   Extend the header's background upward by the bar height so the page never
-   shows through the strip above it. Sits offscreen when the header is at 0. */
-.header::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: var(--top-banner-height);
-    background: var(--cream);
-    pointer-events: none;
-}
-
-@media (max-width: 600px) {
-    /* One row, like desktop, just a touch tighter so it fits small phones */
-    .hero-announce {
-        gap: 5px;
-    }
-
-    .top-banner {
-        gap: 5px;
-        padding: 0 14px;
-    }
-
-    .banner-flyer {
-        gap: 5px;
-    }
-
-    .rb-word {
-        font-size: 13px;
-    }
-
-    body.has-top-banner .mobile-menu {
-        padding-top: calc(70px + var(--top-banner-height));
+        opacity: 1;
+        transform: none;
     }
 }
 
@@ -692,7 +563,7 @@ body.has-top-banner .header {
 
 /* ============ HERO ============ */
 .hero {
-    padding: 7rem 2rem 3rem;
+    padding: 3rem 2rem 3rem;
     text-align: center;
     max-width: 1200px;
     margin: 1rem auto;
@@ -823,7 +694,7 @@ body.has-top-banner .header {
 
 .hero-aisle {
     position: absolute;
-    top: calc(-1rem - 80px);
+    top: -1rem; /* starts right under the rebrand bar */
     bottom: 0;
     left: 50%;
     width: 100vw;
