@@ -174,19 +174,19 @@ body {
 
 .rebrand-bar-logo--breez {
     display: block;
-    height: 25px;
+    height: 28px;
     width: auto;
 }
 
 .rebrand-bar-logo--everyaisle {
     display: block;
-    width: 98px;
+    width: 110px;
     height: auto;
 }
 
 .rebrand-bar-arrow {
     display: block;
-    width: 16px;
+    width: 18px;
     height: auto;
     flex-shrink: 0;
     color: #fff;
