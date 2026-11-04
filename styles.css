@@ -126,9 +126,9 @@ body.intro-active {
 }
 
 /* Homepage rebrand bar: full-width navy strip directly under the fixed navbar.
-   It sits in the page flow (scrolls away with the hero). Left: the old and new
-   logos in a white container (logos never sit directly on navy). Center: the
-   news. Right: a gold "Learn more" button, the bar's single accent. */
+   It sits in the page flow (scrolls away with the hero). One centered row:
+   the old and new logos (in white), a hairline divider, the news, and a gold
+   "Learn more" button, the bar's single accent. */
 body {
     --header-h: 85px; /* overwritten from the header's real height in index.html */
 }
@@ -152,16 +152,14 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 12px 0;
-    display: grid;
-    /* Equal side columns keep the text block centered on the screen, in
-       line with the navbar; the copy is capped so the sides always fit */
-    grid-template-columns: 1fr minmax(0, 440px) 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    gap: 24px;
+    gap: 20px;
 }
 
 .rebrand-bar-logos {
-    justify-self: start;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -198,6 +196,13 @@ body {
     text-align: center;
 }
 
+.rebrand-bar-divider {
+    display: block;
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
 .rebrand-bar-label {
     display: inline;
     /* Same type as the message (inherited); only the color differs */
@@ -216,7 +221,6 @@ body {
 }
 
 .rebrand-bar-cta {
-    justify-self: end;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -254,55 +258,25 @@ body {
     outline-offset: 3px;
 }
 
-/* Tablet: logos and copy on one line, copy left-aligned */
-@media (max-width: 1180px) {
+/* Tablet: same centered row, a little tighter */
+@media (max-width: 1000px) {
     .rebrand-bar-inner {
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: 20px;
+        gap: 16px;
         padding: 14px 0;
     }
-
-    .rebrand-bar-copy {
-        text-align: left;
-    }
-
-    .rebrand-bar-logo--breez {
-        display: none;
-    }
-
-    .rebrand-bar-arrow {
-        display: none;
-    }
-
 }
 
-/* Phone: stack, centered */
+/* Phone: logos, news and button stack, centered */
 @media (max-width: 640px) {
     .rebrand-bar-inner {
-        grid-template-columns: 1fr;
-        justify-items: center;
+        flex-direction: column;
         gap: 12px;
         padding: 16px 0;
     }
 
-    .rebrand-bar-logos,
-    .rebrand-bar-cta {
-        justify-self: center;
+    .rebrand-bar-divider {
+        display: none;
     }
-
-    .rebrand-bar-copy {
-        text-align: center;
-    }
-
-    .rebrand-bar-logo--breez,
-    .rebrand-bar-arrow {
-        display: block;
-    }
-
-    .rebrand-bar-logo--breez {
-        height: 25px;
-    }
-
 }
 
 @media (prefers-reduced-motion: reduce) {
