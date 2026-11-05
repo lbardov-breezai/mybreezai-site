@@ -637,7 +637,8 @@
 /* ============ NEWSLETTER SECTION ============ */
 .newsletter-section {
     padding: 0 2rem 4rem;
-    max-width: 1200px;
+    /* Same 1200px content width as the post sections around it */
+    max-width: calc(1200px + 4rem);
     margin: 0 auto;
 }
 
