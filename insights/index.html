@@ -30,7 +30,7 @@
 
   <link rel="stylesheet" href="/styles.css?v=71">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
-  <link rel="stylesheet" href="insights.css?v=30">
+  <link rel="stylesheet" href="insights.css?v=31">
 
   <!-- HubSpot Tracking Code -->
   <script type="text/javascript" id="hs-script-loader" async defer src="//js-na2.hs-scripts.com/244231130.js"></script>
@@ -142,7 +142,7 @@
         <p>We're working on great content. Check back soon!</p>
       </div>
 
-      <!-- Category Sections (populated by JavaScript) -->
+      <!-- EVERYAISLE in the Press, above the newsletter (populated by JavaScript) -->
       <div id="blogCategorySections"></div>
 
     </div>
@@ -192,6 +192,13 @@
     </div>
   </section>
 
+  <!-- EVERYAISLE News and Insights, below the newsletter (populated by JavaScript) -->
+  <section class="blog-posts-section blog-posts-section--after" id="blogPostsAfter" hidden>
+    <div class="blog-posts-container">
+      <div id="blogCategorySectionsAfter"></div>
+    </div>
+  </section>
+
   <!-- CTA Section -->
   <section class="cta">
     <div class="cta-inner reveal">
@@ -237,7 +244,9 @@
     const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSP089cptBQQqPgcBh3XxtpnHHTzn0J-oYIZWLal_3ZCkx6T23cdC94aLCc-kLMeNV3k4GgZ0yZBD5O/pub?gid=0&single=true&output=csv';
 
     // Fixed display order for category sections.
-    const CATEGORY_ORDER = ['breez-news', 'breez-in-the-news', 'breez-insights'];
+    const CATEGORY_ORDER = ['breez-in-the-news', 'breez-news', 'breez-insights'];
+    // Categories rendered above the newsletter; the rest go below it
+    const CATEGORIES_ABOVE_NEWSLETTER = ['breez-in-the-news'];
 
     let allPosts = [];
 
@@ -491,16 +500,21 @@
     // Render posts grouped into a section per category
     function renderPosts() {
       const container = document.getElementById('blogCategorySections');
+      const containerAfter = document.getElementById('blogCategorySectionsAfter');
+      const sectionAfter = document.getElementById('blogPostsAfter');
 
       if (allPosts.length === 0) {
         document.getElementById('blogEmpty').style.display = 'flex';
         container.innerHTML = '';
+        containerAfter.innerHTML = '';
+        sectionAfter.hidden = true;
         return;
       }
 
       document.getElementById('blogEmpty').style.display = 'none';
 
       let html = '';
+      let htmlAfter = '';
 
       CATEGORY_ORDER.forEach(category => {
         const postsInCategory = allPosts.filter(post => post.category === category);
@@ -510,15 +524,19 @@
           .map(post => createPostCard(post))
           .join('');
 
-        html += `
+        const section = `
           <section class="blog-category-section">
             <h2 class="blog-category-title">${getCategoryName(category)}</h2>
             <div class="blog-grid">${cardsHtml}</div>
           </section>
         `;
+        if (CATEGORIES_ABOVE_NEWSLETTER.includes(category)) html += section;
+        else htmlAfter += section;
       });
 
       container.innerHTML = html;
+      containerAfter.innerHTML = htmlAfter;
+      sectionAfter.hidden = htmlAfter === '';
 
       // Animate cards
       setTimeout(() => {
