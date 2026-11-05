@@ -286,15 +286,6 @@ body {
     }
 }
 
-/* Deep teal color version (?color=teal, set on <html> in index.html) */
-.bar-teal .rebrand-bar {
-    background: #106176;
-}
-
-.bar-teal .rebrand-bar-label {
-    color: #C4E7EF; /* aqua-200: aqua-500 is too low-contrast on teal-700 */
-}
-
 @media (prefers-reduced-motion: reduce) {
     .rebrand-bar.visible {
         animation: none;
