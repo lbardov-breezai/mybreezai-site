@@ -37,7 +37,7 @@
   <link rel="icon" href="/favicon/favicon.ico">
   <link rel="manifest" href="/favicon/site.webmanifest">
 
-  <link rel="stylesheet" href="/styles.css?v=95">
+  <link rel="stylesheet" href="/styles.css?v=96">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
 
   <script type="application/ld+json">
@@ -1207,21 +1207,27 @@
       };
     })();
 
-    // Hero fills the first screen: grow the hero so the partner logo
-    // carousel ends 20px above the bottom of the viewport. The hero centers
-    // its content, so the extra space splits above and below the text.
-    // Desktop/tablet only; never shrinks the hero below its content.
+    // Hero fills the first screen: size the hero so the partner logo
+    // carousel ends 20px above the bottom of the viewport. On tall screens
+    // the hero grows (the extra space splits above and below the text); on
+    // short laptop screens it shrinks to its content, and if the logos still
+    // don't fit, body.hero-compact tightens the spacing around them.
+    // Desktop/tablet only.
     const fitHeroToViewport = () => {
       const hero = document.getElementById('hero');
       const carousel = document.querySelector('.partners-carousel');
       if (!hero || !carousel) return;
       hero.style.minHeight = '';
+      document.body.classList.remove('hero-compact');
       if (window.innerWidth <= 760) return;
-      const heroRect = hero.getBoundingClientRect();
-      const heroTop = heroRect.top + window.scrollY;
-      const belowHero = carousel.getBoundingClientRect().bottom - heroRect.bottom;
-      const target = window.innerHeight - 20 - belowHero - heroTop;
-      if (target > heroRect.height) hero.style.minHeight = target + 'px';
+      const target = () => {
+        const heroRect = hero.getBoundingClientRect();
+        const belowHero = carousel.getBoundingClientRect().bottom - heroRect.bottom;
+        return window.innerHeight - 20 - belowHero - (heroRect.top + window.scrollY);
+      };
+      hero.style.minHeight = '0px';
+      if (target() < hero.offsetHeight) document.body.classList.add('hero-compact');
+      hero.style.minHeight = Math.max(0, target()) + 'px';
     };
     fitHeroToViewport();
     window.addEventListener('resize', fitHeroToViewport);
