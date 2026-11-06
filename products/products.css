@@ -532,7 +532,9 @@
     background: var(--cream);
 }
 
-#shopping-list.groceryaisle-features {
+/* Product sections alternate cream / white after the white overview */
+#inbox-picks.groceryaisle-features,
+#recipes.groceryaisle-features {
     background: var(--white);
 }
 
@@ -630,6 +632,10 @@
     margin-bottom: 0;
 }
 
+#inbox-picks .groceryaisle-feature-product-label {
+    color: var(--text-primary);
+}
+
 #shopping-list .groceryaisle-feature-product-label {
     color: var(--aqua-400);
 }
@@ -680,6 +686,10 @@
     color: var(--gold-500);
 }
 
+#inbox-picks .groceryaisle-feature-list svg {
+    color: var(--text-primary);
+}
+
 #shopping-list .groceryaisle-feature-list svg {
     color: var(--aqua-400);
 }
@@ -691,6 +701,12 @@
 .groceryaisle-feature-list span {
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+/* Feature name before the colon */
+.groceryaisle-feature-list span strong {
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 /* Feature Visuals */
@@ -1272,7 +1288,7 @@
 
 /* ============ PARTNER SUCCESS SECTION ============ */
 .groceryaisle-success {
-    background: var(--white);
+    background: var(--cream); /* follows the white Smart Store section */
     overflow: visible;
 }
 

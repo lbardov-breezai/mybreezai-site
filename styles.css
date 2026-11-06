@@ -712,14 +712,14 @@ body.hero-compact .partners-heading {
     margin: 0 auto 1rem;
     line-height: 1.65;
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(-14px);
     will-change: transform, opacity;
 }
 
+/* Same entrance as the eyebrow and title lines, landing right after them
+   (the class is added 200ms after .hero-title.visible) */
 .hero-subtitle.visible {
-    opacity: 1;
-    transform: translateY(0);
-    transition: none;
+    animation: short-slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
 }
 
 /* ============ HERO STAGE (floating product cards) ============ */
