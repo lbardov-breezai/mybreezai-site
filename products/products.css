@@ -434,9 +434,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: start;
-    padding-bottom: 4rem;
-    border-bottom: 1px solid rgba(16, 42, 80, 0.08);
-    margin-bottom: 4rem;
 }
 
 .groceryaisle-overview-editorial-left .groceryaisle-section-label {
@@ -485,46 +482,6 @@
     align-items: center;
     justify-content: center;
     color: var(--gold-500);
-}
-
-/* ── Metrics bar ── */
-.groceryaisle-overview-metrics {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-}
-
-.groceryaisle-overview-metric {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
-    flex: 1;
-    text-align: center;
-}
-
-.groceryaisle-overview-metric-num {
-    font-family: 'IBM Plex Serif', serif;
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 600;
-    color: var(--teal-500);
-    line-height: 1;
-}
-
-.groceryaisle-overview-metric-label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-secondary);
-}
-
-.groceryaisle-overview-metric-divider {
-    width: 1px;
-    height: 60px;
-    background: rgba(16, 42, 80, 0.12);
-    flex-shrink: 0;
 }
 
 /* ============ CORE FEATURES SECTION ============ */
@@ -1975,22 +1932,6 @@
     .groceryaisle-overview-editorial {
         grid-template-columns: 1fr;
         gap: 2.5rem;
-        padding-bottom: 3rem;
-        margin-bottom: 3rem;
-    }
-
-    .groceryaisle-overview-metrics {
-        flex-wrap: wrap;
-        gap: 2rem;
-        justify-content: center;
-    }
-
-    .groceryaisle-overview-metric {
-        min-width: 120px;
-    }
-
-    .groceryaisle-overview-metric-divider {
-        display: none;
     }
 
     /* Feature blocks — stay 2-col, tighter gap + smaller type */
@@ -2543,15 +2484,6 @@
 
     .groceryaisle-mockup-screen--recipe {
         width: 160px;
-    }
-
-    .groceryaisle-overview-metric-num {
-        font-size: 2.2rem;
-    }
-
-    .groceryaisle-overview-editorial {
-        padding-bottom: 2rem;
-        margin-bottom: 2rem;
     }
 
     .groceryaisle-stats-bar {
