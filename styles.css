@@ -1347,16 +1347,12 @@ body.hero-compact .partners-heading {
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(2, 1fr); /* 2x2 across the full 1200px */
+    gap: 1.5rem;
 }
 
 @media (max-width: 900px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    /* three cards in two columns: center the last one on its own row */
+    /* an odd card count in two columns: center the last one on its own row */
     .stats-grid .stat-card:last-child:nth-child(odd) {
         grid-column: 1 / -1;
         justify-self: center;
@@ -1409,6 +1405,8 @@ body.hero-compact .partners-heading {
     font-size: 0.9rem;
     opacity: 0.85;
     line-height: 1.5;
+    max-width: 460px; /* keep lines readable in the wide 2x2 cards */
+    margin: 0 auto;
 }
 
 /* ============ SUITE SECTION ============ */
