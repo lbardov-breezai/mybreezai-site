@@ -1,0 +1,117 @@
+/* ============ HOMEPAGE INTRO VIDEO ============
+   Sits between the partner logos and "Our Products", just the video.
+   All the interest is in how the video itself moves (index.html drives its
+   transform with a spring, so it lags the scroll a touch and overshoots):
+   - scrolling in, it stands up from lying back, like a laptop lid opening,
+     rising and growing, then settles with a small bounce;
+   - scrolling out at the top, it tips forward and away;
+   - on hover it leans slightly toward the cursor, while a
+     "Watch the introduction" pill follows the cursor. Clicking anywhere on
+     the video plays the full version with sound. */
+
+.iv {
+    position: relative;
+    padding: clamp(2.5rem, 6vw, 4.5rem) 2rem clamp(3rem, 7vw, 5.5rem);
+    max-width: 1264px;
+    margin: 0 auto;
+}
+
+.iv-stage {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    perspective: 1400px;
+}
+
+.iv-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--cream-dark);
+    box-shadow:
+        0 1px 2px rgba(16, 42, 80, 0.06),
+        0 24px 60px -20px rgba(16, 42, 80, 0.28);
+    isolation: isolate;
+    cursor: pointer;
+    will-change: transform;
+}
+
+.iv.is-playing .iv-frame { cursor: auto; }
+
+.iv-frame video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.iv-full { z-index: 2; background: #000; }
+.iv-full[hidden] { display: none; }
+
+/* ---------- Play pill (follows the cursor on hover screens) ---------- */
+.iv-play {
+    position: absolute;
+    z-index: 3;
+    left: var(--mx, 50%);
+    top: var(--my, 50%);
+    translate: -50% -50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.55rem 1.4rem 0.55rem 0.55rem;
+    border: 0;
+    border-radius: 100px;
+    background: var(--white);
+    color: var(--text-primary);
+    font: 600 1rem/1 'Inter', sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 12px 32px -8px rgba(16, 42, 80, 0.35);
+    opacity: 0;
+    scale: 0.6;
+    pointer-events: none;
+    transition:
+        opacity 0.3s ease,
+        scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+        left 0.25s ease-out,
+        top 0.25s ease-out,
+        box-shadow 0.3s ease;
+}
+
+.iv.is-on .iv-play { opacity: 1; scale: 1; pointer-events: auto; }
+.iv.is-on .iv-frame:hover .iv-play { box-shadow: 0 16px 40px -8px rgba(16, 42, 80, 0.45); }
+.iv.is-on.is-playing .iv-play { opacity: 0; scale: 0.6; pointer-events: none; }
+
+.iv-play:focus-visible { outline: 3px solid var(--teal-500); outline-offset: 4px; }
+
+.iv-play-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gold-500);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.iv-play-icon svg { width: 18px; height: 18px; margin-left: 3px; }
+
+.iv-play-time { color: var(--text-secondary); font-weight: 500; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 700px) {
+    .iv { padding-left: 16px; padding-right: 16px; }
+    .iv-frame { border-radius: 14px; }
+    .iv-play { gap: 0.55rem; padding: 0.35rem 0.95rem 0.35rem 0.35rem; font-size: 0.85rem; }
+    .iv-play-icon { width: 36px; height: 36px; }
+    .iv-play-icon svg { width: 14px; height: 14px; }
+}
+
+/* ---------- Reduced motion: the video simply sits still ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .iv-frame { transform: none !important; }
+    .iv .iv-play { transition: none; }
+}

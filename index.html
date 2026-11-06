@@ -39,6 +39,7 @@
 
   <link rel="stylesheet" href="/styles.css?v=96">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
+  <link rel="stylesheet" href="/intro-video.css?v=6">
 
   <script type="application/ld+json">
   {
@@ -452,6 +453,29 @@
           </div>
         </div>
       </div>
+      </div>
+    </section>
+
+    <!-- Intro video: stands up into place as it scrolls in, tips away as it
+         scrolls out (see intro-video.css) -->
+    <section class="iv" id="introVideo" aria-label="The EVERYAISLE introduction video">
+      <div class="iv-stage">
+        <div class="iv-frame">
+          <video class="iv-teaser" muted loop playsinline preload="none" aria-hidden="true"
+            poster="/content/video/everyaisle-introduction-poster.jpg">
+            <source src="/content/video/everyaisle-introduction-teaser.mp4" type="video/mp4">
+          </video>
+          <video class="iv-full" controls playsinline preload="none" hidden
+            poster="/content/video/everyaisle-introduction-poster.jpg">
+            <source src="/content/video/everyaisle-introduction.mp4" type="video/mp4">
+          </video>
+          <button type="button" class="iv-play" aria-label="Play the EVERYAISLE introduction video, 7 minutes 47 seconds">
+            <span class="iv-play-icon" aria-hidden="true">
+              <svg viewBox="0 0 18 18"><path d="M3 1.8v14.4a.8.8 0 0 0 1.2.7l12-7.2a.8.8 0 0 0 0-1.4l-12-7.2A.8.8 0 0 0 3 1.8Z" fill="#0A1B34"/></svg>
+            </span>
+            Watch the introduction <span class="iv-play-time">7:47</span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -1263,6 +1287,159 @@
     });
 
   </script>
+  <script>
+    // Intro video motion. The scroll position sets a target pose; a spring
+    // chases it each frame, so the video lags a touch and overshoots before
+    // settling. pose > 0: still standing up (entering from below);
+    // pose < 0: tipping away (leaving at the top); 0: at rest.
+    (function () {
+      const iv = document.getElementById('introVideo');
+      if (!iv) return;
+      const stage = iv.querySelector('.iv-stage');
+      const frame = iv.querySelector('.iv-frame');
+      const teaser = iv.querySelector('.iv-teaser');
+      const full = iv.querySelector('.iv-full');
+      const play = iv.querySelector('.iv-play');
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canHover = matchMedia('(hover: hover)').matches;
+      const clamp = (v) => Math.min(1, Math.max(0, v));
+      let playing = false;
+
+      // Spring state: the pose, plus a small hover lean (x, y in -1..1)
+      const pose = { x: 1, v: 0, target: 1 };
+      const lean = { x: 0, vx: 0, tx: 0, y: 0, vy: 0, ty: 0 };
+      let raf = 0, last = 0;
+
+      const targetPose = () => {
+        const r = stage.getBoundingClientRect();
+        const headerH = parseFloat(getComputedStyle(document.body).getPropertyValue('--header-h')) || 85;
+        const viewC = (headerH + innerHeight) / 2;
+        // d: +1 just entering at the bottom, 0 centred, -1 just gone at the top
+        const d = (r.top + r.height / 2 - viewC) / ((innerHeight - headerH) / 2 + r.height / 2);
+        if (d >= 0) return clamp((d - 0.1) / 0.5);   // upright by the time it's nearly centred
+        return -clamp((-d - 0.3) / 0.45);             // stays put a while, then tips away
+      };
+
+      const render = () => {
+        const p = pose.x;
+        let t;
+        if (p >= 0) {
+          // Standing up: lying back from its bottom edge, lower, smaller
+          frame.style.transformOrigin = '50% 100%';
+          t = `translateY(${(p * 0.2 * frame.offsetHeight).toFixed(1)}px) rotateX(${(p * 52).toFixed(2)}deg) ` +
+              `rotate(${(p * -2.5).toFixed(2)}deg) scale(${(1 - p * 0.16).toFixed(4)})`;
+        } else {
+          // Tipping away: top edge stays, bottom swings out and up
+          const q = -p;
+          frame.style.transformOrigin = '50% 0%';
+          t = `translateY(${(q * -0.05 * frame.offsetHeight).toFixed(1)}px) rotateX(${(q * -34).toFixed(2)}deg) ` +
+              `rotate(${(q * 1.5).toFixed(2)}deg) scale(${(1 - q * 0.12).toFixed(4)})`;
+        }
+        const lx = lean.x, ly = lean.y;
+        if (Math.abs(lx) > 0.001 || Math.abs(ly) > 0.001) {
+          t += ` rotateY(${(lx * 4).toFixed(2)}deg) rotateX(${(ly * -3).toFixed(2)}deg)`;
+        }
+        frame.style.transform = t;
+      };
+
+      // Critically-under-damped spring: ~6% overshoot, settles in ~0.6s
+      const step = (s, key, vkey, target, dt, k, c) => {
+        const a = k * (target - s[key]) - c * s[vkey];
+        s[vkey] += a * dt;
+        s[key] += s[vkey] * dt;
+      };
+
+      const tick = (now) => {
+        const dt = Math.min(0.032, (now - (last || now)) / 1000) || 0.016;
+        last = now;
+        step(pose, 'x', 'v', pose.target, dt, 170, 17);
+        step(lean, 'x', 'vx', lean.tx, dt, 120, 16);
+        step(lean, 'y', 'vy', lean.ty, dt, 120, 16);
+        render();
+        const settled =
+          Math.abs(pose.target - pose.x) < 0.0005 && Math.abs(pose.v) < 0.0005 &&
+          Math.abs(lean.tx - lean.x) < 0.0005 && Math.abs(lean.ty - lean.y) < 0.0005 &&
+          Math.abs(lean.vx) < 0.0005 && Math.abs(lean.vy) < 0.0005;
+        if (settled) { pose.x = pose.target; render(); raf = 0; last = 0; return; }
+        raf = requestAnimationFrame(tick);
+      };
+      const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+
+      const onScroll = () => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return;
+        pose.target = targetPose();
+        const atRest = Math.abs(pose.target) < 0.05;
+        iv.classList.toggle('is-on', atRest);
+        // Moving away mid-play pauses it; play picks up where it stopped
+        if (playing && Math.abs(pose.target) > 0.35) stopFull();
+        if (!atRest) { lean.tx = 0; lean.ty = 0; }
+        kick();
+      };
+
+      if (reduce) {
+        iv.classList.add('is-on');
+      } else {
+        pose.target = targetPose();
+        pose.x = pose.target;          // no spring on first paint
+        render();
+        iv.classList.toggle('is-on', Math.abs(pose.target) < 0.05);
+        addEventListener('scroll', onScroll, { passive: true });
+        addEventListener('resize', onScroll);
+      }
+
+      // Hover: the pill trails the cursor and the screen leans toward it
+      if (canHover && !reduce) {
+        frame.addEventListener('pointermove', (e) => {
+          if (playing) return;
+          const r = frame.getBoundingClientRect();
+          const half = play.offsetWidth / 2 + 12;
+          iv.style.setProperty('--mx', `${Math.min(r.width - half, Math.max(half, e.clientX - r.left))}px`);
+          iv.style.setProperty('--my', `${Math.min(r.height - 40, Math.max(40, e.clientY - r.top))}px`);
+          if (iv.classList.contains('is-on')) {
+            lean.tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+            lean.ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+            kick();
+          }
+        });
+        frame.addEventListener('pointerleave', () => {
+          iv.style.setProperty('--mx', '50%');
+          iv.style.setProperty('--my', '50%');
+          lean.tx = 0; lean.ty = 0; kick();
+        });
+      }
+
+      // Teaser loops only while the video is on screen
+      new IntersectionObserver(([e]) => {
+        if (playing) return;
+        if (e.isIntersecting && !reduce) { teaser.preload = 'auto'; teaser.play().catch(() => {}); }
+        else teaser.pause();
+      }, { threshold: 0.1 }).observe(stage);
+
+      function stopFull() {
+        playing = false;
+        full.pause();
+        full.hidden = true;
+        iv.classList.remove('is-playing');
+        if (!reduce) teaser.play().catch(() => {});
+      }
+
+      function startFull() {
+        playing = true;
+        iv.classList.add('is-playing');
+        lean.tx = 0; lean.ty = 0; kick();
+        teaser.pause();
+        full.hidden = false;
+        full.preload = 'auto';
+        full.play().catch(() => {});
+        full.focus({ preventScroll: true });
+      }
+
+      frame.addEventListener('click', () => {
+        if (!playing && iv.classList.contains('is-on')) startFull();
+      });
+    })();
+  </script>
+
   <script type="module">
     // Hero: a 3D grocery aisle (three.js, built from hero-lab/src/aisle3d.js)
     // drifting behind the copy. It starts once the intro has revealed the
