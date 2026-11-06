@@ -1,7 +1,8 @@
-// Suite section: the three product pieces as real 3D puzzle pieces.
-// Each piece is an extruded shape with a knob on the right and a matching
-// notch on the left, so when they slide together the knobs seat in the
-// notches. They float apart at their own tilts until the set scrolls to the
+// Suite section: the four product pieces as real 3D puzzle pieces, in a 2x2.
+// Each piece is an extruded shape with knobs on the sides that face a
+// neighbor to its right or below, and matching notches on the sides that face
+// a neighbor to its left or above, so when they slide together the knobs seat
+// in the notches. They float apart at their own tilts until the set scrolls to the
 // middle of the screen, then snap together; once the set is fully off-screen
 // they come apart again, so every pass replays it. Click toggles. Falls back
 // to the existing CSS pieces when WebGL isn't available.
@@ -11,45 +12,82 @@ import {
   Scene, Shape, SRGBColorSpace, WebGLRenderer
 } from 'three';
 
+// col/row in the 2x2 (row 0 on top); reading order matches the cards below
 const PIECES = [
-  { color: '#F4B642', icon: '/content/icon-ai-meal-planner-white.svg', tilt: -5 },
-  { color: '#61C5E5', icon: '/content/icon-chat-and-click-white.svg', tilt: 3 },
-  { color: '#178FAE', icon: '/content/icon-smart-store-white.svg', tilt: -3 }
+  { color: '#F4B642', icon: '/content/icon-ai-meal-planner-white.svg', tilt: -5, col: 0, row: 0 },
+  { color: '#102A50', icon: '/content/icon-proactive-white.svg', tilt: 4, col: 1, row: 0 },
+  { color: '#61C5E5', icon: '/content/icon-chat-and-click-white.svg', tilt: 3, col: 0, row: 1 },
+  { color: '#178FAE', icon: '/content/icon-smart-store-white.svg', tilt: -3, col: 1, row: 1 }
 ];
+const COLS = 2, ROWS = 2;
 const W = 1.2;          // piece body width
 const H = 0.9;          // piece body height
 const R = 0.14;         // corner radius
 const K = 0.17;         // knob radius
 const GAP = 0.34;       // space between pieces at rest
 const DEPTH = 0.16;
-const PX_PER_UNIT = 115; // on-screen scale of the pieces
+const PX_PER_UNIT = 135; // on-screen scale of the pieces
 const BEVEL = 0.05;
 
-// Body with a knob sticking out on the right and a notch cut in on the left.
-// The bevel grows every outline by BEVEL, so neighbors sit W + 2*BEVEL apart
-// and the notch is centered 2*BEVEL left of the edge, right where the
+// Body with a knob or notch on each side that meets a neighbor. The bevel
+// grows every outline by BEVEL, so neighbors sit W + 2*BEVEL (or H + 2*BEVEL)
+// apart and a notch is centered 2*BEVEL outside its edge, right where the
 // neighbor's knob lands, with a hair of clearance.
-const PITCH = W + 2 * BEVEL;
-const pieceShape = () => {
+const PITCH_X = W + 2 * BEVEL;
+const PITCH_Y = H + 2 * BEVEL;
+// resting set size, in units (pieces apart, plus room for knobs, tilt and bob)
+const REST_W = COLS * (PITCH_X + GAP) + 0.5;
+
+// edges: { bottom, right, top, left } -> 'knob' | 'notch' | undefined (flat)
+const edgesFor = ({ col, row }) => ({
+  right: col < COLS - 1 ? 'knob' : undefined,
+  left: col > 0 ? 'notch' : undefined,
+  bottom: row < ROWS - 1 ? 'knob' : undefined,
+  top: row > 0 ? 'notch' : undefined
+});
+
+const pieceShape = (edges) => {
   const off = 2 * BEVEL;
   const notchR = K + 2 * BEVEL + 0.012;
   const dy = Math.sqrt(notchR * notchR - off * off);
-  const a0 = Math.atan2(dy, off);
+  // corners counterclockwise from bottom-left; each edge runs corner i -> i+1
+  // with its outward normal n (interior on the left, outside on the right)
+  const P = [[0, 0], [W, 0], [W, H], [0, H]];
+  const sides = [
+    { kind: edges.bottom, n: [0, -1] },
+    { kind: edges.right, n: [1, 0] },
+    { kind: edges.top, n: [0, 1] },
+    { kind: edges.left, n: [-1, 0] }
+  ];
+  const dir = (i) => {
+    const a = P[i], b = P[(i + 1) % 4];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+  };
+  const ang = (v) => Math.atan2(v[1], v[0]);
+
   const s = new Shape();
-  const cy = H / 2;
-  s.moveTo(R, 0);
-  s.lineTo(W - R, 0);
-  s.quadraticCurveTo(W, 0, W, R);
-  s.lineTo(W, cy - K);
-  s.absarc(W, cy, K, -Math.PI / 2, Math.PI / 2, false);
-  s.lineTo(W, H - R);
-  s.quadraticCurveTo(W, H, W - R, H);
-  s.lineTo(R, H);
-  s.quadraticCurveTo(0, H, 0, H - R);
-  s.lineTo(0, cy + dy);
-  s.absarc(-off, cy, notchR, a0, -a0, true);
-  s.lineTo(0, R);
-  s.quadraticCurveTo(0, 0, R, 0);
+  const d0 = dir(0);
+  s.moveTo(P[0][0] + d0[0] * R, P[0][1] + d0[1] * R);
+  sides.forEach(({ kind, n }, i) => {
+    const a = P[i], b = P[(i + 1) % 4];
+    const d = dir(i), dn = dir((i + 1) % 4);
+    const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    if (kind === 'knob') {
+      s.lineTo(m[0] - d[0] * K, m[1] - d[1] * K);
+      // half circle bulging out along n, from -d round to +d
+      s.absarc(m[0], m[1], K, ang([-d[0], -d[1]]), ang([-d[0], -d[1]]) + Math.PI, false);
+    } else if (kind === 'notch') {
+      const c = [m[0] + n[0] * off, m[1] + n[1] * off];
+      s.lineTo(m[0] - d[0] * dy, m[1] - d[1] * dy);
+      // arc of the circle around c that dips into the body, edge to edge
+      s.absarc(c[0], c[1], notchR,
+        ang([-n[0] * off - d[0] * dy, -n[1] * off - d[1] * dy]),
+        ang([-n[0] * off + d[0] * dy, -n[1] * off + d[1] * dy]), true);
+    }
+    s.lineTo(b[0] - d[0] * R, b[1] - d[1] * R);
+    s.quadraticCurveTo(b[0], b[1], b[0] + dn[0] * R, b[1] + dn[1] * R);
+  });
   return s;
 };
 
@@ -116,18 +154,21 @@ export async function mountSuite3D(float) {
 
   const shadowTex = shadowTexture();
   const shadowGeo = new PlaneGeometry(1, 1);
-  const geoBody = new ExtrudeGeometry(pieceShape(), {
-    depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL,
-    bevelSegments: 6, curveSegments: 40
-  });
-  // center the body (not the knob) on the origin so pieces line up by W
-  geoBody.translate(-W / 2, -H / 2, -DEPTH / 2);
+  const bodyGeo = (p) => {
+    const g = new ExtrudeGeometry(pieceShape(edgesFor(p)), {
+      depth: DEPTH, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: BEVEL,
+      bevelSegments: 6, curveSegments: 40
+    });
+    // center the body (not the knobs) on the origin so pieces line up by pitch
+    g.translate(-W / 2, -H / 2, -DEPTH / 2);
+    return g;
+  };
   const iconGeo = new PlaneGeometry(0.5, 0.5);
   const icons = await Promise.all(PIECES.map((p) => iconTexture(p.icon)));
 
   const pieces = PIECES.map((p, i) => {
     const holder = new Group();
-    const body = new Mesh(geoBody, new MeshPhysicalMaterial({
+    const body = new Mesh(bodyGeo(p), new MeshPhysicalMaterial({
       color: new Color(p.color), roughness: 0.5, metalness: 0,
       clearcoat: 0.35, clearcoatRoughness: 0.3, envMapIntensity: 0.07
     }));
@@ -155,9 +196,9 @@ export async function mountSuite3D(float) {
     camera.aspect = w / h;
     // Hold a fixed scale (px per unit) so the pieces stay the same size as
     // the canvas height changes; back off on narrow frames so the resting
-    // set (about 5.4 units wide) still fits.
+    // set (REST_W units wide) still fits.
     const span = 2 * Math.tan((camera.fov * Math.PI) / 360);
-    camera.position.z = Math.max(h / (PX_PER_UNIT * span), 5.4 / (span * camera.aspect));
+    camera.position.z = Math.max(h / (PX_PER_UNIT * span), REST_W / (span * camera.aspect));
     camera.updateProjectionMatrix();
   };
   resize();
@@ -238,11 +279,15 @@ export async function mountSuite3D(float) {
       const local = reduceMotion ? 1 : clamp01((ent * 1100 - p.i * 140) / 900);
       const e = easeOutBack(local);
       const m = mergeK;
-      const apartX = (p.i - 1) * (PITCH + GAP);
-      const togetherX = (p.i - 1) * PITCH;
+      const gx = p.col - (COLS - 1) / 2;
+      const gy = (ROWS - 1) / 2 - p.row;
+      const apartX = gx * (PITCH_X + GAP);
+      const togetherX = gx * PITCH_X;
+      const apartY = gy * (PITCH_Y + GAP);
+      const togetherY = gy * PITCH_Y;
       const bob = reduceMotion ? 0 : Math.sin(t * 1.3 + p.phase) * 0.06 * (1 - m) + Math.sin(t * 1.1) * 0.05 * m;
       const x = apartX + (togetherX - apartX) * m;
-      const y = bob - (1 - e) * 0.35;
+      const y = apartY + (togetherY - apartY) * m + bob - (1 - e) * 0.35;
       const tilt = (p.tilt * Math.PI) / 180;
       p.holder.position.set(x, y, (1 - e) * -2);
       p.holder.rotation.set(
