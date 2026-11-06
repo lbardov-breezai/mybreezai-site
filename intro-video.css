@@ -1,13 +1,8 @@
 /* ============ HOMEPAGE INTRO VIDEO ============
-   Sits between the partner logos and "Our Products", just the video.
-   All the interest is in how the video itself moves (index.html drives its
-   transform with a spring, so it lags the scroll a touch and overshoots):
-   - scrolling in, it stands up from lying back, like a laptop lid opening,
-     rising and growing, then settles with a small bounce;
-   - scrolling out at the top, it tips forward and away;
-   - on hover it leans slightly toward the cursor, while a
-     "Watch the introduction" pill follows the cursor. Clicking anywhere on
-     the video plays the full version with sound. */
+   Sits between the partner logos and "Our Products". Before playing, a cover
+   shows the thumbnail image, scaled down a little, on its own plain
+   background, with a simple play button at the centre; clicking plays the full video with sound
+   and hands over to the native video controls. */
 
 .iv {
     position: relative;
@@ -20,7 +15,6 @@
     position: relative;
     max-width: 1100px;
     margin: 0 auto;
-    perspective: 1400px;
 }
 
 .iv-frame {
@@ -30,88 +24,78 @@
     overflow: hidden;
     background: var(--cream-dark);
     box-shadow:
-        0 1px 2px rgba(16, 42, 80, 0.06),
-        0 24px 60px -20px rgba(16, 42, 80, 0.28);
+        0 1px 2px rgba(16, 42, 80, 0.05),
+        0 8px 24px -12px rgba(16, 42, 80, 0.14);
     isolation: isolate;
-    cursor: pointer;
-    will-change: transform;
 }
 
-.iv.is-playing .iv-frame { cursor: auto; }
+/* Before it plays: a hairline stroke and a slightly deeper shadow */
+.iv:not(.is-playing) .iv-frame {
+    box-shadow:
+        0 0 0 1px rgba(16, 42, 80, 0.05),
+        0 1px 3px rgba(16, 42, 80, 0.06),
+        0 14px 36px -14px rgba(16, 42, 80, 0.22);
+}
 
-.iv-frame video {
+.iv-full {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    background: var(--cream-dark);
 }
 
-.iv-full { z-index: 2; background: #000; }
-.iv-full[hidden] { display: none; }
+.iv.is-playing .iv-full { background: #000; object-fit: contain; }
 
-/* ---------- Play pill (follows the cursor on hover screens) ---------- */
-.iv-play {
+/* ---------- Cover (thumbnail, smaller than the video) ---------- */
+.iv-cover {
     position: absolute;
-    z-index: 3;
-    left: var(--mx, 50%);
-    top: var(--my, 50%);
-    translate: -50% -50%;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.55rem 1.4rem 0.55rem 0.55rem;
-    border: 0;
-    border-radius: 100px;
-    background: var(--white);
-    color: var(--text-primary);
-    font: 600 1rem/1 'Inter', sans-serif;
-    white-space: nowrap;
-    cursor: pointer;
-    box-shadow: 0 12px 32px -8px rgba(16, 42, 80, 0.35);
-    opacity: 0;
-    scale: 0.6;
-    pointer-events: none;
-    transition:
-        opacity 0.3s ease,
-        scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
-        left 0.25s ease-out,
-        top 0.25s ease-out,
-        box-shadow 0.3s ease;
-}
-
-.iv.is-on .iv-play { opacity: 1; scale: 1; pointer-events: auto; }
-.iv.is-on .iv-frame:hover .iv-play { box-shadow: 0 16px 40px -8px rgba(16, 42, 80, 0.45); }
-.iv.is-on.is-playing .iv-play { opacity: 0; scale: 0.6; pointer-events: none; }
-
-.iv-play:focus-visible { outline: 3px solid var(--teal-500); outline-offset: 4px; }
-
-.iv-play-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--gold-500);
+    inset: 0;
+    z-index: 1;
     display: grid;
     place-items: center;
-    flex-shrink: 0;
+    background: #FBF9F5;   /* matches the thumbnail's own background */
+    cursor: pointer;
 }
 
-.iv-play-icon svg { width: 18px; height: 18px; margin-left: 3px; }
+.iv-cover img { width: 78%; height: auto; display: block; }
+.iv.is-playing .iv-cover { display: none; }
 
-.iv-play-time { color: var(--text-secondary); font-weight: 500; }
+/* ---------- Play button (centred on the video) ---------- */
+.iv-play {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    width: 72px;
+    height: 72px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--gold-500);
+    color: #0A1B34;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    box-shadow: 0 0 0 6px rgba(251, 249, 245, 0.85), 0 4px 14px -4px rgba(16, 42, 80, 0.25);
+    transition: transform 0.2s ease;
+}
+
+.iv-play svg { width: 24px; height: 24px; margin-left: 4px; }
+.iv-play:hover { transform: scale(1.06); }
+.iv-play:focus-visible { outline: 3px solid var(--teal-500); outline-offset: 4px; }
+.iv.is-playing .iv-play { display: none; }
 
 /* ---------- Small screens ---------- */
 @media (max-width: 700px) {
     .iv { padding-left: 16px; padding-right: 16px; }
     .iv-frame { border-radius: 14px; }
-    .iv-play { gap: 0.55rem; padding: 0.35rem 0.95rem 0.35rem 0.35rem; font-size: 0.85rem; }
-    .iv-play-icon { width: 36px; height: 36px; }
-    .iv-play-icon svg { width: 14px; height: 14px; }
+    .iv-play { width: 48px; height: 48px; }
+    .iv-play svg { width: 16px; height: 16px; margin-left: 3px; }
 }
 
-/* ---------- Reduced motion: the video simply sits still ---------- */
 @media (prefers-reduced-motion: reduce) {
-    .iv-frame { transform: none !important; }
-    .iv .iv-play { transition: none; }
+    .iv-play { transition: none; }
 }

@@ -666,6 +666,12 @@ body.hero-compact .partners-heading {
     margin-top: 0.75rem;
 }
 
+/* Fill the full measure (not the site-wide balanced wrap), so both
+   paragraphs share the same width */
+.hero-subtitle p {
+    text-wrap: pretty;
+}
+
 .hero-title-accent {
     color: var(--teal-500);
 }
