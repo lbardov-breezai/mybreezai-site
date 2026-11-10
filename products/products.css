@@ -2749,24 +2749,52 @@
 }
 
 .pf-visual {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     margin-top: 3rem;
     width: 100%;
-    aspect-ratio: 16 / 7;
+    aspect-ratio: 2 / 1;
     border-radius: 20px;
-    background: var(--pf-color);
+    /* Depth: light falls from the top-left, the bottom-right sinks into shadow */
+    background:
+        radial-gradient(110% 90% at 12% 0%, rgba(255, 255, 255, 0.24) 0%, transparent 55%),
+        radial-gradient(80% 80% at 100% 100%, rgba(0, 0, 0, 0.26) 0%, transparent 60%),
+        linear-gradient(155deg,
+            color-mix(in srgb, var(--pf-color) 85%, white) 0%,
+            var(--pf-color) 45%,
+            color-mix(in srgb, var(--pf-color) 78%, black) 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 40px 70px -40px color-mix(in srgb, var(--pf-color) 70%, transparent);
+}
+
+/* Faint dot grid that fades out toward the edges */
+.pf-visual::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1.6px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 70% at 60% 45%, #000 0%, transparent 75%);
+    mask-image: radial-gradient(ellipse 70% 70% at 60% 45%, #000 0%, transparent 75%);
+}
+
+/* Fine film grain so the gradient doesn't look flat or banded */
+.pf-visual::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .pf-block {
     margin-top: 4rem;
-}
-
-.pf-block-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    margin: 0 0 2rem;
 }
 
 .pf-grid {
@@ -2854,7 +2882,7 @@
 
 @media (max-width: 860px) {
     .pf-intro { max-width: none; }
-    .pf-visual { aspect-ratio: 4 / 3; margin-top: 2rem; }
+    .pf-visual { aspect-ratio: 1 / 1; margin-top: 2rem; }
     .pf-why { padding: 2.5rem 1.5rem; }
     .pf-why-lead { font-size: 1.4rem; }
 }
