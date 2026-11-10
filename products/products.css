@@ -2723,3 +2723,124 @@
     white-space: nowrap;
 }
 
+
+/* ============ PRODUCT FEATURE LAYOUT (pf-*) ============
+   Intro → full-width visual → 3-column "What it does" grid → "Why it matters" band.
+   Each section sets --pf-color to its product color. */
+.pf-section {
+    --pf-color: var(--text-primary);
+}
+
+.pf-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 50%;
+}
+
+.pf-intro .groceryaisle-feature-product,
+.pf-intro .groceryaisle-feature-title,
+.pf-intro .groceryaisle-feature-desc {
+    margin-bottom: 0;
+}
+
+.pf-section .groceryaisle-feature-product-label {
+    color: var(--pf-color);
+}
+
+.pf-visual {
+    margin-top: 3rem;
+    width: 100%;
+    aspect-ratio: 16 / 7;
+    border-radius: 20px;
+    background: var(--pf-color);
+}
+
+.pf-block {
+    margin-top: 4rem;
+}
+
+.pf-block-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0 0 2rem;
+}
+
+.pf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 3rem;
+    row-gap: 3rem;
+}
+
+.pf-feature-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    color: var(--pf-color);
+    margin-bottom: 1rem;
+}
+
+.pf-feature-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.pf-feature-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem;
+}
+
+.pf-feature-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Closing statement: product-color rule on the left, larger serif text */
+.pf-why {
+    margin-top: 4rem;
+    padding: 2.5rem 0 0;
+    border-top: 1px solid var(--border-light);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.pf-why .pf-block-label {
+    margin: 0;
+    padding-top: 0.4rem;
+}
+
+.pf-why-text {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 1.5rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin: 0;
+    padding-left: 1.5rem;
+    border-left: 3px solid var(--pf-color);
+}
+
+@media (max-width: 1080px) {
+    .pf-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 860px) {
+    .pf-intro { max-width: none; }
+    .pf-visual { aspect-ratio: 4 / 3; margin-top: 2rem; }
+    .pf-why { grid-template-columns: 1fr; gap: 1.25rem; }
+    .pf-why-text { font-size: 1.25rem; }
+}
+
+@media (max-width: 640px) {
+    .pf-grid { grid-template-columns: 1fr; row-gap: 2rem; }
+}
