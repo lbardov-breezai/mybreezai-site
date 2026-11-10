@@ -2909,23 +2909,23 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 22%;
+    height: 18%;
     z-index: 1;
     pointer-events: none;
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(2.5px);
+    backdrop-filter: blur(2.5px);
 }
 
 .pf-scroll-blur--top {
     top: 0;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
 }
 
 .pf-scroll-blur--bottom {
     bottom: 0;
-    -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 100%);
-    mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
 }
 
 .pf-scroll-track {
@@ -2934,7 +2934,7 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    animation: pf-scroll-up 32s linear infinite;
+    animation: pf-scroll-up 20s linear infinite;
     will-change: transform;
 }
 
