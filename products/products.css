@@ -490,8 +490,8 @@
 }
 
 /* Product sections alternate cream / white after the white overview */
-#inbox-picks.groceryaisle-features,
-#recipes.groceryaisle-features {
+#ai-picks-to-inbox.groceryaisle-features,
+#ai-smart-store.groceryaisle-features {
     background: var(--white);
 }
 
@@ -589,15 +589,15 @@
     margin-bottom: 0;
 }
 
-#inbox-picks .groceryaisle-feature-product-label {
+#ai-picks-to-inbox .groceryaisle-feature-product-label {
     color: var(--text-primary);
 }
 
-#shopping-list .groceryaisle-feature-product-label {
+#ai-chat-to-shop .groceryaisle-feature-product-label {
     color: var(--aqua-400);
 }
 
-#recipes .groceryaisle-feature-product-label {
+#ai-smart-store .groceryaisle-feature-product-label {
     color: var(--teal-500);
 }
 
@@ -639,19 +639,19 @@
     margin-top: 2px;
 }
 
-#meal-planning .groceryaisle-feature-list svg {
+#ai-meal-planner .groceryaisle-feature-list svg {
     color: var(--gold-500);
 }
 
-#inbox-picks .groceryaisle-feature-list svg {
+#ai-picks-to-inbox .groceryaisle-feature-list svg {
     color: var(--text-primary);
 }
 
-#shopping-list .groceryaisle-feature-list svg {
+#ai-chat-to-shop .groceryaisle-feature-list svg {
     color: var(--aqua-400);
 }
 
-#recipes .groceryaisle-feature-list svg {
+#ai-smart-store .groceryaisle-feature-list svg {
     color: var(--teal-500);
 }
 
