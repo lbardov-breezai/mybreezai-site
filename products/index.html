@@ -365,8 +365,18 @@
                     <p class="groceryaisle-feature-desc">Personalized meal plans, replenishment reminders, and offers delivered straight to shoppers’ inboxes, automatically.</p>
                 </div>
 
-                <!-- Placeholder visual in the product color; real artwork comes later -->
-                <div class="pf-visual reveal" role="img" aria-label="AI Picks to Inbox preview"></div>
+                <!-- Vertical loop: the email is repeated twice and the track slides up by
+                     half its height, so the second copy lands exactly where the first began. -->
+                <div class="pf-visual pf-visual--scroll reveal">
+                    <div class="pf-scroll-track">
+                        <div class="pf-scroll-item">
+                            <img src="/content/products/picks-to-inbox-email.webp" alt="Example AI Picks to Inbox email with personalized Thanksgiving meal ideas and weekly coupons" width="1200" height="2969" loading="lazy" decoding="async">
+                        </div>
+                        <div class="pf-scroll-item" aria-hidden="true">
+                            <img src="/content/products/picks-to-inbox-email.webp" alt="" width="1200" height="2969" loading="lazy" decoding="async">
+                        </div>
+                    </div>
+                </div>
 
                 <div class="pf-block reveal">
                     <div class="pf-grid">
