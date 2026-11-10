@@ -2894,18 +2894,47 @@
 /* ============ PF VISUAL: VERTICAL AUTO-SCROLL ============
    Two identical items stacked; the track moves up by 50% and loops seamlessly.
    The panel crops anything outside it. */
-.pf-visual--scroll {
+/* Window fills the panel and fades the card in/out at the top and bottom edges */
+.pf-scroll-window {
+    position: absolute;
+    inset: 0;
     display: flex;
     justify-content: center;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
+}
+
+/* Light blur on the same edges, strongest at the border and easing off inward */
+.pf-scroll-blur {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 22%;
+    z-index: 1;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.pf-scroll-blur--top {
+    top: 0;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+}
+
+.pf-scroll-blur--bottom {
+    bottom: 0;
+    -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, transparent 100%);
 }
 
 .pf-scroll-track {
-    width: clamp(280px, 46%, 560px);
+    width: clamp(280px, 64%, 780px);
     align-self: flex-start;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    animation: pf-scroll-up 48s linear infinite;
+    animation: pf-scroll-up 50s linear infinite;
     will-change: transform;
 }
 
@@ -2935,7 +2964,7 @@
 }
 
 @media (max-width: 860px) {
-    .pf-scroll-track { width: 82%; }
+    .pf-scroll-track { width: 86%; }
     .pf-scroll-item { padding-top: 1.5rem; }
 }
 
