@@ -2892,13 +2892,27 @@
 }
 
 /* ============ PF VISUALS ============
-   Every product shows a device rising from the bottom edge of its panel:
-   a browser window (Meal Planner, Picks to Inbox, Smart Store) or two phones
-   (Chat to Shop). Motion stays calm: a staggered rise on reveal, and on the
-   long pages a slow guided scroll that pauses on each part of the page. */
-.pf-visual--window,
-.pf-visual--phones {
-    --pf-inset-top: 7%;
+   Browser windows (Meal Planner, Picks to Inbox, Smart Store) rise from the
+   bottom edge of their panel, with a faint second window behind for depth.
+   Long pages loop upward continuously. Chat to Shop shows two 3D phones. */
+.pf-visual--window {
+    --pf-inset-top: 9%;
+    --pf-win-w: clamp(280px, 84%, 1040px);
+}
+
+/* Faint window peeking out behind the main one */
+.pf-browser-ghost {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--pf-inset-top) - 22px);
+    bottom: 0;
+    width: calc(var(--pf-win-w) * 0.92);
+    transform: translateX(-50%);
+    border-radius: 14px 14px 0 0;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    opacity: 0;
+    transition: opacity 0.8s ease 0.45s;
 }
 
 .pf-browser {
@@ -2906,45 +2920,110 @@
     left: 50%;
     top: var(--pf-inset-top);
     bottom: 0;
-    width: clamp(280px, 84%, 1040px);
+    width: var(--pf-win-w);
     display: flex;
     flex-direction: column;
     background: var(--white);
     border-radius: 14px 14px 0 0;
     overflow: hidden;
     box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.12),
-        0 30px 60px -20px rgba(0, 0, 0, 0.45);
+        0 0 0 1px rgba(0, 0, 0, 0.08),
+        0 2px 4px rgba(0, 0, 0, 0.08),
+        0 30px 70px -20px rgba(0, 0, 0, 0.5);
     transform: translateX(-50%) translateY(40px);
     opacity: 0;
     transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s, opacity 0.6s ease 0.15s;
 }
 
+.pf-visual.visible .pf-browser { transform: translateX(-50%); opacity: 1; }
+.pf-visual.visible .pf-browser-ghost { opacity: 1; }
+
+/* Toolbar: traffic lights, back/forward, address pill, actions */
 .pf-browser-bar {
     flex-shrink: 0;
-    display: flex;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 2.4fr) 1fr;
     align-items: center;
-    height: 30px;
-    padding: 0 14px;
-    background: #F1F2F4;
-    border-bottom: 1px solid #E4E6EA;
+    gap: 12px;
+    height: 44px;
+    padding: 0 16px;
+    background: linear-gradient(to bottom, #FAFAFB, #F0F1F3);
+    border-bottom: 1px solid #E2E4E8;
+    color: #8A919C;
 }
 
-.pf-browser-bar span {
-    width: 10px;
-    height: 10px;
+.pf-browser-bar svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.pf-browser-dots {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    gap: 8px;
+}
+
+.pf-browser-dots span {
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: #D5D8DE;
+    background: #FF5F57;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.18);
 }
 
-/* Size container: lets the tour move by exactly (page height - window height) */
+.pf-browser-dots span:nth-child(2) { background: #FEBC2E; }
+.pf-browser-dots span:nth-child(3) { background: #28C840; }
+
+.pf-browser-nav {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    display: flex;
+    gap: 10px;
+}
+
+.pf-browser-nav svg:last-child { opacity: 0.45; }
+
+.pf-browser-url {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    padding: 0 12px;
+    background: var(--white);
+    border: 1px solid #E2E4E8;
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: #4A5260;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+.pf-browser-url svg { width: 12px; height: 12px; }
+.pf-browser-url svg:last-child { margin-left: auto; }
+
+.pf-browser-url span {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pf-browser-actions {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    gap: 14px;
+}
+
 .pf-browser-viewport {
     position: relative;
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    container-type: size;
 }
 
 .pf-browser-viewport img {
@@ -2953,84 +3032,89 @@
     height: auto;
 }
 
-/* Guided tour: glide, pause, glide, pause... then ease back to the top.
-   --pf-end is the full travel; each stop is a fraction of it. */
-.pf-tour {
-    --pf-end: calc(-100% + 100cqh);
-    animation: pf-tour 28s ease-in-out infinite;
+/* Continuous loop: two copies stacked, the track moves up by exactly one copy */
+.pf-loop {
+    animation: pf-loop-up 18s linear infinite;
     will-change: transform;
 }
 
-.pf-tour--inbox {
-    animation-duration: 30s;
+.pf-loop--inbox { animation-duration: 17s; }
+
+@keyframes pf-loop-up {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
 }
 
-@keyframes pf-tour {
-    0%, 9%    { transform: translateY(0); }
-    21%, 32%  { transform: translateY(calc(var(--pf-end) * 0.34)); }
-    44%, 55%  { transform: translateY(calc(var(--pf-end) * 0.67)); }
-    67%, 82%  { transform: translateY(var(--pf-end)); }
-    96%, 100% { transform: translateY(0); }
-}
-
-/* Phones */
+/* ============ CHAT TO SHOP: TWO PHONES IN 3D ============
+   The tilt follows the pointer (--pf-tx/--pf-ty from pf-visuals.js); the float
+   uses the separate `translate` property so it composes with the 3D transform. */
 .pf-phones {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: var(--pf-inset-top);
-    bottom: 0;
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 4%;
+    gap: 3.5%;
+    padding-top: 6%;
+    perspective: 1600px;
 }
 
 .pf-phone {
-    width: clamp(150px, 27%, 310px);
-    padding: 9px;
+    width: clamp(140px, 23%, 270px);
+    padding: 8px;
     background: #0B1220;
-    border-radius: 44px;
+    border-radius: 40px;
     box-shadow:
         inset 0 0 0 1.5px rgba(255, 255, 255, 0.12),
-        0 30px 60px -20px rgba(0, 0, 0, 0.5);
-    transform: translateY(40px);
-    opacity: 0;
-    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s, opacity 0.6s ease 0.15s;
-}
-
-.pf-phone + .pf-phone {
-    transition-delay: 0.3s;
+        0 40px 70px -25px rgba(0, 0, 0, 0.6);
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: pf-float 6s ease-in-out infinite;
 }
 
 .pf-phone img {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 35px;
+    border-radius: 32px;
 }
 
-/* Rise in once the panel is revealed */
-.pf-visual.visible .pf-browser {
-    transform: translateX(-50%);
-    opacity: 1;
+.pf-phone--a {
+    transform:
+        rotateY(calc(16deg + var(--pf-tx, 0) * 10deg))
+        rotateX(calc(8deg - var(--pf-ty, 0) * 8deg))
+        rotateZ(-4deg)
+        skewY(-3deg);
 }
 
-.pf-visual.visible .pf-phone {
-    transform: none;
-    opacity: 1;
+.pf-phone--b {
+    margin-top: 9%;
+    animation-delay: -3s;
+    transform:
+        rotateY(calc(-16deg + var(--pf-tx, 0) * 10deg))
+        rotateX(calc(8deg - var(--pf-ty, 0) * 8deg))
+        rotateZ(4deg)
+        skewY(3deg);
+}
+
+@keyframes pf-float {
+    0%, 100% { translate: 0 -10px; }
+    50%      { translate: 0 10px; }
 }
 
 @media (max-width: 860px) {
-    .pf-browser { width: 90%; border-radius: 10px 10px 0 0; }
-    .pf-browser-bar { height: 22px; padding: 0 10px; }
-    .pf-browser-bar span { width: 7px; height: 7px; }
-    .pf-phones { gap: 3%; }
-    .pf-phone { width: 42%; padding: 6px; border-radius: 28px; }
+    .pf-visual--window { --pf-win-w: 92%; --pf-inset-top: 8%; }
+    .pf-browser { border-radius: 10px 10px 0 0; }
+    .pf-browser-bar { grid-template-columns: auto 1fr; height: 32px; gap: 10px; padding: 0 10px; }
+    .pf-browser-nav, .pf-browser-actions { display: none; }
+    .pf-browser-dots { gap: 5px; }
+    .pf-browser-dots span { width: 8px; height: 8px; }
+    .pf-browser-url { grid-column: 2; height: 22px; font-size: 11px; padding: 0 8px; }
+    .pf-phone { width: 40%; border-radius: 28px; padding: 6px; }
     .pf-phone img { border-radius: 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .pf-tour { animation: none; }
-    .pf-browser, .pf-phone { transition: none; }
+    .pf-loop, .pf-phone { animation: none; }
+    .pf-browser, .pf-browser-ghost { transition: none; }
 }
