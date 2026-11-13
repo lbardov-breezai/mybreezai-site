@@ -301,7 +301,6 @@
 
                 <!-- Browser window rising from the bottom of the panel; the page inside loops upward continuously -->
                 <div class="pf-visual pf-visual--window reveal">
-                    <div class="pf-browser-ghost" aria-hidden="true"></div>
                     <div class="pf-browser">
                         <div class="pf-browser-bar" aria-hidden="true">
                             <div class="pf-browser-dots"><span></span><span></span><span></span></div>
@@ -383,7 +382,6 @@
 
                 <!-- Browser window rising from the bottom of the panel; the page inside loops upward continuously -->
                 <div class="pf-visual pf-visual--window reveal">
-                    <div class="pf-browser-ghost" aria-hidden="true"></div>
                     <div class="pf-browser">
                         <div class="pf-browser-bar" aria-hidden="true">
                             <div class="pf-browser-dots"><span></span><span></span><span></span></div>
@@ -521,7 +519,6 @@
 
                 <!-- Browser window rising from the bottom of the panel, storefront shown in full -->
                 <div class="pf-visual pf-visual--window reveal">
-                    <div class="pf-browser-ghost" aria-hidden="true"></div>
                     <div class="pf-browser">
                         <div class="pf-browser-bar" aria-hidden="true">
                             <div class="pf-browser-dots"><span></span><span></span><span></span></div>
@@ -1042,6 +1039,22 @@
         });
     </script>
     <script src="/products/pf-visuals.js" defer></script>
+    <script type="module">
+      // AI Chat to Shop: swap the CSS phones for real 3D ones (three.js, built from
+      // hero-lab/src/phones3d.js) as the section gets close. Without WebGL the CSS phones stay.
+      const phonesVisual = document.querySelector('#ai-chat-to-shop .pf-visual--phones');
+      if (phonesVisual) {
+        const screens = [...phonesVisual.querySelectorAll('.pf-phone img')].map((img) => img.currentSrc || img.src);
+        const io = new IntersectionObserver(([entry]) => {
+          if (!entry.isIntersecting) return;
+          io.disconnect();
+          import('/hero-lab/dist-products/phones3d.js')
+            .then((m) => m.mountPhones3D(phonesVisual, screens))
+            .catch((e) => console.warn('[phones3d] falling back to CSS phones', e));
+        }, { rootMargin: '600px 0px' });
+        io.observe(phonesVisual);
+      }
+    </script>
 </body>
 
 </html>
