@@ -26,11 +26,11 @@ const FRONT_Z = DEPTH / 2 + BEVEL;   // front face of the body
 
 // Resting pose of each phone: turned toward the other, left one higher
 const POSES = [
-  { x: -0.7, y: -0.06, z: 0, rx: -0.06, ry: 0.42, rz: -0.07, phase: 0 },
-  { x: 0.7, y: -0.34, z: -0.2, rx: -0.06, ry: -0.42, rz: 0.07, phase: Math.PI }
+  { x: -0.66, y: -0.1, z: 0, rx: -0.03, ry: 0.26, rz: -0.035, phase: 0 },
+  { x: 0.66, y: -0.28, z: -0.12, rx: -0.03, ry: -0.26, rz: 0.035, phase: Math.PI }
 ];
-const VISIBLE_H = 2.55;              // world units shown top to bottom (phones bleed off the bottom)
-const MIN_VISIBLE_W = 3.1;           // keep both phones in frame on narrow panels
+const VISIBLE_H = 2.85;              // world units shown top to bottom (phones bleed off the bottom)
+const MIN_VISIBLE_W = 3.3;           // keep both phones in frame on narrow panels
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (k) => 1 - Math.pow(1 - k, 3);
@@ -73,8 +73,8 @@ const canvasTexture = (w, h, paint) => {
 // Diagonal glass sheen: brighter top-left, fading out by the middle
 const sheenTexture = () => canvasTexture(256, 512, (ctx, w, h) => {
   const g = ctx.createLinearGradient(0, 0, w, h * 0.7);
-  g.addColorStop(0, 'rgba(255,255,255,0.20)');
-  g.addColorStop(0.35, 'rgba(255,255,255,0.05)');
+  g.addColorStop(0, 'rgba(255,255,255,0.10)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.025)');
   g.addColorStop(0.36, 'rgba(255,255,255,0.0)');
   g.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = g;
@@ -111,10 +111,10 @@ export async function mountPhones3D(visual, screens) {
   const pmrem = new PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   pmrem.dispose();
-  const key = new DirectionalLight(0xffffff, 1.4);
+  const key = new DirectionalLight(0xffffff, 1.1);
   key.position.set(-3, 4, 5);
   scene.add(key);
-  const rim = new DirectionalLight(0xcfe9ff, 0.8);
+  const rim = new DirectionalLight(0xcfe9ff, 0.4);
   rim.position.set(4, 1, -2);
   scene.add(rim);
 
@@ -142,8 +142,8 @@ export async function mountPhones3D(visual, screens) {
   });
   bodyGeo.translate(0, 0, -DEPTH / 2);
   const frameMat = new MeshPhysicalMaterial({
-    color: new Color('#3B4352'), metalness: 0.85, roughness: 0.28,
-    clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 1.1
+    color: new Color('#2A303B'), metalness: 0.6, roughness: 0.4,
+    clearcoat: 0.3, clearcoatRoughness: 0.3, envMapIntensity: 0.8
   });
   const glassGeo = roundedPlane(W + BEVEL * 1.2, H + BEVEL * 1.2, R + BEVEL * 0.6);
   const glassMat = new MeshPhysicalMaterial({
@@ -177,7 +177,7 @@ export async function mountPhones3D(visual, screens) {
     // Side buttons: action + volume on the left, power on the right
     const sideX = W / 2 + BEVEL;
     [[-1, 0.62, 0.12], [-1, 0.38, 0.22], [-1, 0.1, 0.22], [1, 0.42, 0.34]].forEach(([side, y, len]) => {
-      const b = new Mesh(new RoundedBoxGeometry(0.03, len, 0.045, 2, 0.012), buttonMat);
+      const b = new Mesh(new RoundedBoxGeometry(0.022, len, 0.036, 2, 0.01), buttonMat);
       b.position.set(side * (sideX + 0.008), y, 0);
       phone.add(b);
     });
@@ -231,14 +231,14 @@ export async function mountPhones3D(visual, screens) {
     if (entered < 0) entered = now;
     cx += (tx - cx) * 0.07;
     cy += (ty - cy) * 0.07;
-    rig.rotation.set(-0.05 + cy * 0.16, cx * 0.32, 0);
+    rig.rotation.set(-0.03 + cy * 0.08, cx * 0.18, 0);
 
     phones.forEach(({ pose, holder, shadow }, i) => {
       const k = reduceMotion ? 1 : easeOutCubic(clamp01((now - entered - i * 180) / 1100));
-      const bob = reduceMotion ? 0 : Math.sin(t * 1.05 + pose.phase) * 0.045;
+      const bob = reduceMotion ? 0 : Math.sin(t * 0.9 + pose.phase) * 0.025;
       holder.position.y = pose.y + bob - (1 - k) * 0.9;
-      holder.rotation.x = reduceMotion ? 0 : Math.sin(t * 0.8 + pose.phase) * 0.025;
-      holder.rotation.y = reduceMotion ? 0 : Math.cos(t * 0.7 + pose.phase) * 0.03;
+      holder.rotation.x = reduceMotion ? 0 : Math.sin(t * 0.8 + pose.phase) * 0.012;
+      holder.rotation.y = reduceMotion ? 0 : Math.cos(t * 0.7 + pose.phase) * 0.015;
       shadow.material.opacity = k;
       shadow.position.y = pose.y - 0.2 + bob * 0.4 - (1 - k) * 0.9;
     });
