@@ -299,12 +299,12 @@
                     <p class="groceryaisle-feature-desc">On-demand meal planning on your site, built around what each shopper needs.</p>
                 </div>
 
-                <!-- Scroll-linked: the recipe page scrolls inside its frame as the visitor scrolls the site -->
-                <div class="pf-visual pf-visual--scrub reveal" data-pf-scrub>
-                    <div class="pf-browser pf-scrub-frame">
+                <!-- Browser window rising from the bottom of the panel; the page inside takes a slow guided tour -->
+                <div class="pf-visual pf-visual--window reveal">
+                    <div class="pf-browser">
                         <div class="pf-browser-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-                        <div class="pf-scrub-viewport">
-                            <img class="pf-scrub-img" src="/content/products/meal-planner-recipe.webp" alt="AI Meal Planner recipe page with health score, nutrition facts and substitutions" width="1400" height="1762" loading="lazy" decoding="async">
+                        <div class="pf-browser-viewport">
+                            <img class="pf-tour pf-tour--meal" src="/content/products/meal-planner-recipe.webp" alt="AI Meal Planner recipe page with health score, nutrition facts and substitutions" width="1500" height="3370" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -372,21 +372,14 @@
                     <p class="groceryaisle-feature-desc">Personalized meal plans, replenishment reminders, and offers delivered straight to shoppers’ inboxes, automatically.</p>
                 </div>
 
-                <!-- Vertical loop: the email is repeated twice and the track slides up by
-                     half its height, so the second copy lands exactly where the first began. -->
-                <div class="pf-visual pf-visual--scroll reveal">
-                    <div class="pf-scroll-window">
-                        <div class="pf-scroll-track">
-                            <div class="pf-scroll-item">
-                                <img src="/content/products/picks-to-inbox-email.webp" alt="Example AI Picks to Inbox email with personalized Thanksgiving meal ideas and weekly coupons" width="1600" height="3959" loading="lazy" decoding="async">
-                            </div>
-                            <div class="pf-scroll-item" aria-hidden="true">
-                                <img src="/content/products/picks-to-inbox-email.webp" alt="" width="1600" height="3959" loading="lazy" decoding="async">
-                            </div>
+                <!-- Browser window rising from the bottom of the panel; the page inside takes a slow guided tour -->
+                <div class="pf-visual pf-visual--window reveal">
+                    <div class="pf-browser">
+                        <div class="pf-browser-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+                        <div class="pf-browser-viewport">
+                            <img class="pf-tour pf-tour--inbox" src="/content/products/picks-to-inbox-email.webp" alt="Example AI Picks to Inbox email with personalized Thanksgiving meal ideas and weekly coupons" width="1800" height="3797" loading="lazy" decoding="async">
                         </div>
                     </div>
-                    <div class="pf-scroll-blur pf-scroll-blur--top" aria-hidden="true"></div>
-                    <div class="pf-scroll-blur pf-scroll-blur--bottom" aria-hidden="true"></div>
                 </div>
 
                 <div class="pf-block reveal">
@@ -445,13 +438,13 @@
                     <p class="groceryaisle-feature-desc">A conversational AI assistant that helps shoppers search, build a basket, and shop around their own preferences and allergies.</p>
                 </div>
 
-                <!-- Two phones in 3D: tilted, floating out of sync, leaning toward the pointer -->
-                <div class="pf-visual pf-visual--phones reveal" data-pf-tilt>
+                <!-- Two phones side by side, rising from the bottom of the panel -->
+                <div class="pf-visual pf-visual--phones reveal">
                     <div class="pf-phones">
-                        <div class="pf-phone pf-phone--a">
+                        <div class="pf-phone">
                             <img src="/content/products/chat-to-shop-1.webp" alt="AI Chat to Shop recommending a meal with main ingredients" width="760" height="1516" loading="lazy" decoding="async">
                         </div>
-                        <div class="pf-phone pf-phone--b">
+                        <div class="pf-phone">
                             <img src="/content/products/chat-to-shop-2.webp" alt="AI Chat to Shop showing what's trending at the store with add-to-cart buttons" width="760" height="1517" loading="lazy" decoding="async">
                         </div>
                     </div>
@@ -508,12 +501,12 @@
                     <p class="groceryaisle-feature-desc">A dynamic, self-managed digital storefront built for grocers who don’t have the time or team to keep their site current.</p>
                 </div>
 
-                <!-- Browser window that lands flat as it scrolls in, then slowly zooms into the AI panel -->
-                <div class="pf-visual pf-visual--store reveal" data-pf-land>
-                    <div class="pf-browser pf-store-frame">
+                <!-- Browser window rising from the bottom of the panel, storefront shown in full -->
+                <div class="pf-visual pf-visual--window reveal">
+                    <div class="pf-browser">
                         <div class="pf-browser-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-                        <div class="pf-store-viewport">
-                            <img class="pf-store-img" src="/content/products/smart-store-storefront.webp" alt="AI Smart Store storefront with personalized meal ideas panel and sale products" width="2400" height="1485" loading="lazy" decoding="async">
+                        <div class="pf-browser-viewport">
+                            <img src="/content/products/smart-store-storefront.webp" alt="AI Smart Store storefront with personalized meal ideas panel and sale products" width="2400" height="1485" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
@@ -1024,7 +1017,6 @@
 
         });
     </script>
-    <script src="/products/pf-visuals.js" defer></script>
 </body>
 
 </html>

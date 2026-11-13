@@ -2891,94 +2891,37 @@
     .pf-grid { grid-template-columns: 1fr; row-gap: 2rem; }
 }
 
-/* ============ PF VISUAL: VERTICAL AUTO-SCROLL ============
-   Two identical items stacked; the track moves up by 50% and loops seamlessly.
-   The panel crops anything outside it. */
-/* Window fills the panel and fades the card in/out at the top and bottom edges */
-.pf-scroll-window {
+/* ============ PF VISUALS ============
+   Every product shows a device rising from the bottom edge of its panel:
+   a browser window (Meal Planner, Picks to Inbox, Smart Store) or two phones
+   (Chat to Shop). Motion stays calm: a staggered rise on reveal, and on the
+   long pages a slow guided scroll that pauses on each part of the page. */
+.pf-visual--window,
+.pf-visual--phones {
+    --pf-inset-top: 7%;
+}
+
+.pf-browser {
     position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 84%, transparent 100%);
-}
-
-/* Light blur on the same edges, strongest at the border and easing off inward */
-.pf-scroll-blur {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 18%;
-    z-index: 1;
-    pointer-events: none;
-    -webkit-backdrop-filter: blur(2.5px);
-    backdrop-filter: blur(2.5px);
-}
-
-.pf-scroll-blur--top {
-    top: 0;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
-}
-
-.pf-scroll-blur--bottom {
+    left: 50%;
+    top: var(--pf-inset-top);
     bottom: 0;
-    -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
-    mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.1) 85%, transparent 100%);
-}
-
-.pf-scroll-track {
-    width: clamp(280px, 84%, 1000px);
-    align-self: flex-start;
-    flex-shrink: 0;
+    width: clamp(280px, 84%, 1040px);
     display: flex;
     flex-direction: column;
-    animation: pf-scroll-up 26s linear infinite;
-    will-change: transform;
-}
-
-/* Gap lives inside each item so both halves of the track are identical */
-.pf-scroll-item {
-    padding-top: 3rem;
-}
-
-.pf-scroll-item img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 14px;
     background: var(--white);
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.12),
-        0 24px 48px -16px rgba(0, 0, 0, 0.45);
-}
-
-@keyframes pf-scroll-up {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-50%); }
-}
-
-@media (max-width: 860px) {
-    .pf-scroll-track { width: 86%; }
-    .pf-scroll-item { padding-top: 1.5rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .pf-scroll-track { animation: none; }
-}
-
-/* ============ PF VISUALS: SHARED BROWSER FRAME ============ */
-.pf-browser {
-    background: var(--white);
-    border-radius: 14px;
+    border-radius: 14px 14px 0 0;
     overflow: hidden;
     box-shadow:
         0 1px 2px rgba(0, 0, 0, 0.12),
-        0 30px 60px -20px rgba(0, 0, 0, 0.5);
+        0 30px 60px -20px rgba(0, 0, 0, 0.45);
+    transform: translateX(-50%) translateY(40px);
+    opacity: 0;
+    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s, opacity 0.6s ease 0.15s;
 }
 
 .pf-browser-bar {
+    flex-shrink: 0;
     display: flex;
     gap: 6px;
     align-items: center;
@@ -2995,131 +2938,99 @@
     background: #D5D8DE;
 }
 
-/* ============ MEAL PLANNER: SCROLL-LINKED PAGE ============
-   Frame bleeds off the bottom of the panel; the page inside moves by
-   --pf-shift (px, set by pf-visuals.js from scroll position). */
-.pf-scrub-frame {
-    position: absolute;
-    left: 50%;
-    top: 8%;
-    width: clamp(260px, 62%, 760px);
-    height: 100%;
-    transform: translateX(-50%);
-}
-
-.pf-scrub-viewport {
-    height: calc(100% - 30px);
+/* Size container: lets the tour move by exactly (page height - window height) */
+.pf-browser-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
     overflow: hidden;
+    container-type: size;
 }
 
-.pf-scrub-img {
+.pf-browser-viewport img {
     display: block;
     width: 100%;
     height: auto;
-    transform: translateY(calc(var(--pf-shift, 0px) * -1));
+}
+
+/* Guided tour: glide, pause, glide, pause... then ease back to the top.
+   --pf-end is the full travel; each stop is a fraction of it. */
+.pf-tour {
+    --pf-end: calc(-100% + 100cqh);
+    animation: pf-tour 28s ease-in-out infinite;
     will-change: transform;
 }
 
-/* ============ CHAT TO SHOP: TWO PHONES IN 3D ============
-   The tilt follows the pointer (--pf-tx/--pf-ty from pf-visuals.js); the float
-   uses the separate `translate` property so it composes with the 3D transform. */
+.pf-tour--inbox {
+    animation-duration: 30s;
+}
+
+@keyframes pf-tour {
+    0%, 9%    { transform: translateY(0); }
+    21%, 32%  { transform: translateY(calc(var(--pf-end) * 0.34)); }
+    44%, 55%  { transform: translateY(calc(var(--pf-end) * 0.67)); }
+    67%, 82%  { transform: translateY(var(--pf-end)); }
+    96%, 100% { transform: translateY(0); }
+}
+
+/* Phones */
 .pf-phones {
     position: absolute;
-    inset: 0;
+    left: 0;
+    right: 0;
+    top: var(--pf-inset-top);
+    bottom: 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 3.5%;
-    padding-top: 6%;
-    perspective: 1600px;
+    gap: 4%;
 }
 
 .pf-phone {
-    width: clamp(140px, 23%, 270px);
-    padding: 8px;
+    width: clamp(150px, 27%, 310px);
+    padding: 9px;
     background: #0B1220;
-    border-radius: 40px;
+    border-radius: 44px;
     box-shadow:
         inset 0 0 0 1.5px rgba(255, 255, 255, 0.12),
-        0 40px 70px -25px rgba(0, 0, 0, 0.6);
-    transform-style: preserve-3d;
-    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-    animation: pf-float 6s ease-in-out infinite;
+        0 30px 60px -20px rgba(0, 0, 0, 0.5);
+    transform: translateY(40px);
+    opacity: 0;
+    transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s, opacity 0.6s ease 0.15s;
+}
+
+.pf-phone + .pf-phone {
+    transition-delay: 0.3s;
 }
 
 .pf-phone img {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 32px;
+    border-radius: 35px;
 }
 
-.pf-phone--a {
-    transform:
-        rotateY(calc(16deg + var(--pf-tx, 0) * 10deg))
-        rotateX(calc(8deg - var(--pf-ty, 0) * 8deg))
-        rotateZ(-4deg)
-        skewY(-3deg);
+/* Rise in once the panel is revealed */
+.pf-visual.visible .pf-browser {
+    transform: translateX(-50%);
+    opacity: 1;
 }
 
-.pf-phone--b {
-    margin-top: 9%;
-    animation-delay: -3s;
-    transform:
-        rotateY(calc(-16deg + var(--pf-tx, 0) * 10deg))
-        rotateX(calc(8deg - var(--pf-ty, 0) * 8deg))
-        rotateZ(4deg)
-        skewY(3deg);
-}
-
-@keyframes pf-float {
-    0%, 100% { translate: 0 -10px; }
-    50%      { translate: 0 10px; }
-}
-
-/* ============ SMART STORE: LANDING WINDOW + FOCUS ZOOM ============
-   --pf-enter (0..1, from pf-visuals.js) flattens the window as it scrolls in;
-   the screenshot then loops a slow zoom into the AI panel on the left. */
-.pf-store-frame {
-    position: absolute;
-    left: 50%;
-    top: 7%;
-    width: clamp(280px, 86%, 1040px);
-    transform-origin: 50% 100%;
-    transform:
-        translateX(-50%)
-        perspective(1800px)
-        rotateX(calc((1 - var(--pf-enter, 1)) * 30deg))
-        scale(calc(0.88 + var(--pf-enter, 1) * 0.12));
-}
-
-.pf-store-viewport {
-    overflow: hidden;
-}
-
-.pf-store-img {
-    display: block;
-    width: 100%;
-    height: auto;
-    transform-origin: 0% 58%;
-    animation: pf-store-focus 16s ease-in-out infinite;
-}
-
-@keyframes pf-store-focus {
-    0%, 22%   { transform: scale(1); }
-    40%, 62%  { transform: scale(1.7); }
-    80%, 100% { transform: scale(1); }
+.pf-visual.visible .pf-phone {
+    transform: none;
+    opacity: 1;
 }
 
 @media (max-width: 860px) {
-    .pf-scrub-frame { width: 84%; top: 6%; }
-    .pf-phone { width: 40%; border-radius: 28px; padding: 6px; }
+    .pf-browser { width: 90%; border-radius: 10px 10px 0 0; }
+    .pf-browser-bar { height: 22px; padding: 0 10px; }
+    .pf-browser-bar span { width: 7px; height: 7px; }
+    .pf-phones { gap: 3%; }
+    .pf-phone { width: 42%; padding: 6px; border-radius: 28px; }
     .pf-phone img { border-radius: 22px; }
-    .pf-store-frame { width: 150%; left: 8%; transform-origin: 0 100%; transform: none; }
-    .pf-browser-bar { height: 22px; }
-    .pf-scrub-viewport { height: calc(100% - 22px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .pf-phone, .pf-store-img { animation: none; }
+    .pf-tour { animation: none; }
+    .pf-browser, .pf-phone { transition: none; }
 }
