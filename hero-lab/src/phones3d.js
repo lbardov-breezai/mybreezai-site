@@ -14,14 +14,14 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 const SCREEN_ASPECT = 760 / 1516;   // width / height of the screenshots
-const BEZEL = 0.045;
+const BEZEL = 0.02;
 const SCREEN_W = 1.0;
 const SCREEN_H = SCREEN_W / SCREEN_ASPECT;
 const W = SCREEN_W + 2 * BEZEL;      // body outline (before bevel)
 const H = SCREEN_H + 2 * BEZEL;
-const R = 0.17;                      // body corner radius
-const DEPTH = 0.07;
-const BEVEL = 0.035;
+const R = 0.13;                      // body corner radius
+const DEPTH = 0.03;
+const BEVEL = 0.014;
 const FRONT_Z = DEPTH / 2 + BEVEL;   // front face of the body
 
 // Resting pose of each phone: turned toward the other, left one higher
@@ -29,7 +29,7 @@ const POSES = [
   { x: -0.66, y: -0.1, z: 0, rx: -0.03, ry: 0.26, rz: -0.035, phase: 0 },
   { x: 0.66, y: -0.28, z: -0.12, rx: -0.03, ry: -0.26, rz: 0.035, phase: Math.PI }
 ];
-const VISIBLE_H = 2.85;              // world units shown top to bottom (phones bleed off the bottom)
+const VISIBLE_H = 2.6;              // world units shown top to bottom (phones bleed off the bottom)
 const MIN_VISIBLE_W = 3.3;           // keep both phones in frame on narrow panels
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -142,15 +142,15 @@ export async function mountPhones3D(visual, screens) {
   });
   bodyGeo.translate(0, 0, -DEPTH / 2);
   const frameMat = new MeshPhysicalMaterial({
-    color: new Color('#2A303B'), metalness: 0.6, roughness: 0.4,
-    clearcoat: 0.3, clearcoatRoughness: 0.3, envMapIntensity: 0.8
+    color: new Color('#C9CED6'), metalness: 0.55, roughness: 0.35,
+    clearcoat: 0.2, clearcoatRoughness: 0.3, envMapIntensity: 0.7
   });
   const glassGeo = roundedPlane(W + BEVEL * 1.2, H + BEVEL * 1.2, R + BEVEL * 0.6);
   const glassMat = new MeshPhysicalMaterial({
     color: new Color('#05070B'), metalness: 0, roughness: 0.12,
     clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 0.9
   });
-  const screenGeo = roundedPlane(SCREEN_W, SCREEN_H, R - BEZEL * 0.8);
+  const screenGeo = roundedPlane(SCREEN_W, SCREEN_H, R - BEZEL);
   const sheenMat = new MeshBasicMaterial({ map: sheenTexture(), transparent: true, depthWrite: false, toneMapped: false });
   const buttonMat = frameMat;
   const shadowMat = new MeshBasicMaterial({ map: shadowTexture(), transparent: true, depthWrite: false });
@@ -177,8 +177,8 @@ export async function mountPhones3D(visual, screens) {
     // Side buttons: action + volume on the left, power on the right
     const sideX = W / 2 + BEVEL;
     [[-1, 0.62, 0.12], [-1, 0.38, 0.22], [-1, 0.1, 0.22], [1, 0.42, 0.34]].forEach(([side, y, len]) => {
-      const b = new Mesh(new RoundedBoxGeometry(0.022, len, 0.036, 2, 0.01), buttonMat);
-      b.position.set(side * (sideX + 0.008), y, 0);
+      const b = new Mesh(new RoundedBoxGeometry(0.012, len, 0.02, 2, 0.005), buttonMat);
+      b.position.set(side * (sideX + 0.004), y, 0);
       phone.add(b);
     });
 
