@@ -593,7 +593,7 @@
     color: var(--text-primary);
 }
 
-#ai-chat-to-shop .groceryaisle-feature-product-label {
+#ai-shopping-assistant .groceryaisle-feature-product-label {
     color: var(--aqua-400);
 }
 
@@ -647,7 +647,7 @@
     color: var(--text-primary);
 }
 
-#ai-chat-to-shop .groceryaisle-feature-list svg {
+#ai-shopping-assistant .groceryaisle-feature-list svg {
     color: var(--aqua-400);
 }
 
