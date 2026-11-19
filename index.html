@@ -37,7 +37,7 @@
   <link rel="icon" href="/favicon/favicon.ico">
   <link rel="manifest" href="/favicon/site.webmanifest">
 
-  <link rel="stylesheet" href="/styles.css?v=97">
+  <link rel="stylesheet" href="/styles.css?v=98">
   <link rel="stylesheet" href="/hamburgermenu.css?v=2">
   <link rel="stylesheet" href="/intro-video.css?v=12">
 
@@ -813,6 +813,25 @@
       setTimeout(() => {
         introOverlay.remove();
       }, ENTRANCE_DURATION + 500);
+    })();
+
+    // Partner logos: start the strip further right so the first logo's
+    // left edge sits at --partners-start (set per screen size in
+    // styles.css), then glide in at the loop's own speed
+    (function () {
+      const wrapper = document.querySelector('.partners-carousel-wrapper');
+      const carousel = document.querySelector('.partners-carousel');
+      const track = carousel && carousel.querySelector('.partners-track');
+      if (!wrapper || !track) return;
+      const wrapperStyle = getComputedStyle(wrapper);
+      const start = parseFloat(wrapperStyle.getPropertyValue('--partners-start')) || 0;
+      const padLeft = parseFloat(wrapperStyle.paddingLeft) || 0;
+      const offset = Math.max(0, start - padLeft);
+      const loopSeconds = parseFloat(getComputedStyle(carousel).animationDuration.split(',').pop());
+      if (!offset || !loopSeconds) return;
+      const speed = track.offsetWidth / loopSeconds;   // px per second
+      carousel.style.setProperty('--partners-lead-in', offset + 'px');
+      carousel.style.setProperty('--partners-lead-in-dur', (offset / speed) + 's');
     })();
 
     // Scroll handling

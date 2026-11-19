@@ -1010,6 +1010,9 @@ body.hero-compact .partners-heading {
 
 /* Carousel Wrapper */
 .partners-carousel-wrapper {
+    /* Where the first logo's left edge sits when the page is revealed;
+       index.html reads it to size the one-time lead-in */
+    --partners-start: 100px;
     position: relative;
     width: 100%;
     overflow: hidden;
@@ -1028,14 +1031,36 @@ body.hero-compact .partners-heading {
 }
 
 /* Carousel Animation */
+/* Two animations: a one-time lead-in that glides the strip in from
+   --partners-lead-in (set by index.html so the first logo starts at
+   --partners-start), then the endless loop, which starts exactly where the
+   lead-in ends. index.html sets --partners-lead-in-dur so both move at
+   the same speed. Without the variables the lead-in is skipped. */
 .partners-carousel {
     display: flex;
     width: fit-content;
-    animation: scroll-partners 63s linear infinite;
+    animation-name: partners-lead-in, scroll-partners;
+    animation-duration: var(--partners-lead-in-dur, 0s), 63s;
+    animation-delay: 0s, var(--partners-lead-in-dur, 0s);
+    animation-timing-function: linear, linear;
+    animation-iteration-count: 1, infinite;
 }
 
-.partners-carousel:hover {
+.partners-carousel:hover,
+body.intro-active .partners-carousel {
+    /* Hold still while the intro logo plays, so the first logo is still
+       in place when the page is revealed */
     animation-play-state: paused;
+}
+
+@keyframes partners-lead-in {
+    from {
+        transform: translateX(var(--partners-lead-in, 0px));
+    }
+
+    to {
+        transform: translateX(0);
+    }
 }
 
 @keyframes scroll-partners {
@@ -1050,12 +1075,13 @@ body.hero-compact .partners-heading {
 
 /* Tracks and Logos */
 .partners-track {
+    --partners-gap: 32px;
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: var(--partners-gap);
     /* Trailing space equals the gap, so the join between the two tracks
        matches every other gap and the loop is seamless. */
-    padding: 0 32px 0 0;
+    padding: 0 var(--partners-gap) 0 0;
 }
 
 .partner-logo {
@@ -1116,28 +1142,54 @@ body.hero-compact .partners-heading {
 }
 
 /* Partners Responsive */
+/* Tablets and phones: the strip runs edge to edge (bleeding through the
+   section's 1rem gutter) with a short fixed fade, instead of the desktop's
+   wide side padding and 10% fade that left room for only two small logos.
+   Cards get fixed, larger sizes so the logos stay readable. */
 @media (max-width: 900px) {
     .partners-carousel-wrapper {
-        padding-bottom: 4rem;
+        --partners-start: 32px;
+        --partners-fade: 32px;
+        width: auto;
+        margin: 0 -1rem;
+        padding: 0 0 2rem;
+        mask-image: linear-gradient(to right,
+                transparent 0,
+                black var(--partners-fade),
+                black calc(100% - var(--partners-fade)),
+                transparent 100%);
+        -webkit-mask-image: linear-gradient(to right,
+                transparent 0,
+                black var(--partners-fade),
+                black calc(100% - var(--partners-fade)),
+                transparent 100%);
     }
     .partners-carousel {
-        animation: scroll-partners 103s linear infinite;
+        animation-duration: var(--partners-lead-in-dur, 0s), 80s;
+    }
+    .partners-track {
+        --partners-gap: 20px;
     }
     .partner-logo {
-        padding: 10px;
+        width: 156px;
+        height: 78px;
+        padding: 14px;
     }
 }
 
 @media (max-width: 600px) {
     .partners-carousel-wrapper {
-        padding-bottom: 4rem;
+        /* First logo lines up with the page's 1rem gutter */
+        --partners-start: 16px;
+        --partners-fade: 16px;
     }
-    .partners-carousel {
-        animation: scroll-partners 87s linear infinite;
+    .partners-track {
+        --partners-gap: 16px;
     }
-
     .partner-logo {
-        padding: 10px;
+        width: 144px;
+        height: 72px;
+        padding: 12px;
     }
 }
 
