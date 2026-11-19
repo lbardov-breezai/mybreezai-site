@@ -1031,7 +1031,7 @@ body.hero-compact .partners-heading {
 .partners-carousel {
     display: flex;
     width: fit-content;
-    animation: scroll-partners 53s linear infinite;
+    animation: scroll-partners 63s linear infinite;
 }
 
 .partners-carousel:hover {
@@ -1121,7 +1121,7 @@ body.hero-compact .partners-heading {
         padding-bottom: 4rem;
     }
     .partners-carousel {
-        animation: scroll-partners 87s linear infinite;
+        animation: scroll-partners 103s linear infinite;
     }
     .partner-logo {
         padding: 10px;
@@ -1133,7 +1133,7 @@ body.hero-compact .partners-heading {
         padding-bottom: 4rem;
     }
     .partners-carousel {
-        animation: scroll-partners 73s linear infinite;
+        animation: scroll-partners 87s linear infinite;
     }
 
     .partner-logo {
