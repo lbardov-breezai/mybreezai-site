@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Articles | EVERYAISLE</title>
+  <meta name="description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery, personalized shopping, and retail media for independent grocers.">
+
+  <meta property="og:title" content="News & Resources | EVERYAISLE">
+  <meta property="og:description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery and personalized shopping.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="EVERYAISLE">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="News & Resources | EVERYAISLE">
+  <meta name="twitter:description" content="News, insights, and resources from EVERYAISLE on AI-powered grocery and personalized shopping.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap"
+    rel="stylesheet">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon.ico">
+  <link rel="manifest" href="/favicon/site.webmanifest">
+
+  <link rel="stylesheet" href="/styles.css?v=71">
+  <link rel="stylesheet" href="/hamburgermenu.css?v=2">
+  <link rel="stylesheet" href="/insights/insights.css?v=36">
+
+  <!-- HubSpot Tracking Code -->
+  <script type="text/javascript" id="hs-script-loader" async defer src="//js-na2.hs-scripts.com/244231130.js"></script>
+</head>
+
+<body>
+  <!-- Header Partial -->
+  <div id="header-placeholder" style="min-height: 80px;"></div>
+
+  <script>
+    fetch('/partials/header.html')
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        document.getElementById('header-placeholder').innerHTML = html;
+        initializeHeader();
+      });
+
+    function initializeHeader() {
+      var btn = document.getElementById('mobileMenuBtn');
+      var menu = document.getElementById('mobileMenu');
+      var dropdownTriggers = document.querySelectorAll('.mobile-menu-dropdown-trigger');
+      var menuLinks = document.querySelectorAll('.mobile-menu-link, .mobile-menu-dropdown-items a, .mobile-menu-demo a');
+
+      if (!btn || !menu) return;
+
+      btn.addEventListener('click', function () {
+        btn.classList.toggle('active');
+        menu.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+      });
+
+      dropdownTriggers.forEach(function (trigger) {
+        trigger.addEventListener('click', function () {
+          trigger.parentElement.classList.toggle('open');
+        });
+      });
+
+      menuLinks.forEach(function (link) {
+        link.addEventListener('click', function () {
+          btn.classList.remove('active');
+          menu.classList.remove('active');
+          document.body.classList.remove('menu-open');
+        });
+      });
+
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 1000) {
+          btn.classList.remove('active');
+          menu.classList.remove('active');
+          document.body.classList.remove('menu-open');
+        }
+      });
+
+      // Mark the active nav link based on current URL
+      var path = window.location.pathname;
+      document.querySelectorAll('.nav-link, .mobile-menu-link').forEach(function (link) {
+        if (link.getAttribute('href') === path) {
+          link.classList.add('nav-link--active');
+        }
+      });
+    }
+  </script>
+
+  <!-- Category Hero (heading filled in by JavaScript) -->
+  <section class="blog-hero blog-hero--category">
+    <div class="blog-hero-inner reveal">
+      <a href="/insights/" class="blog-hero-back">
+        <span class="blog-hero-back-icon">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10 4C10 4 6.00001 6.94593 6 8C5.99999 9.05413 10 12 10 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </span>
+        Back to all News & Resources
+      </a>
+      <h1 id="categoryTitle">&nbsp;</h1>
+      <p id="categoryDescription">&nbsp;</p>
+    </div>
+  </section>
+
+  <!-- All posts in this category -->
+  <section class="blog-posts-section">
+    <div class="blog-posts-container">
+
+      <!-- Loading State -->
+      <div class="blog-loading" id="blogLoading">
+        <div class="loading-spinner"></div>
+        <p>Loading posts...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="blog-error" id="blogError" style="display: none;">
+        <div class="error-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3>Unable to load posts</h3>
+        <p>Please check back later or refresh the page.</p>
+        <button class="retry-btn" onclick="loadCategoryPosts()">Try Again</button>
+      </div>
+
+      <!-- Empty State (also used for an unknown category) -->
+      <div class="blog-empty" id="blogEmpty" style="display: none;">
+        <div class="empty-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <h3>No posts yet</h3>
+        <p>We're working on great content. Check back soon!</p>
+        <a href="/insights/" class="back-btn">Back to News & Resources</a>
+      </div>
+
+      <div class="blog-grid" id="categoryGrid"></div>
+
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="cta-inner reveal">
+      <h2>Ready to transform your grocery experience?</h2>
+      <p>See how EVERYAISLE can help you increase basket sizes and build customer loyalty.</p>
+      <div class="cta-buttons">
+        <a href="/bookdemo/" class="btn-primary">
+          <span class="btn-primary-bg"></span>
+          <span class="btn-primary-spotlight"></span>
+          <span class="btn-primary-content">
+            <span class="btn-primary-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M18.33338 11.31584V11.45209M18.33338 11.45209C18.33338 10.766 17.83362 10.1805 17.15162 10.06766L16.21213 9.91225V10.614M18.33338 11.45209V13.18712C18.33338 14.71237 18.33338 15.47487 18.09925 16.082C17.74137 17.01037 17.0045 17.74387 16.07212 18.10025C15.46225 18.33338 14.69637 18.33338 13.16437 18.33338C12.361 18.33338 11.95934 18.33338 11.5855 18.2515C11.01509 18.12663 10.48484 17.86275 10.04234 17.48338C9.75234 17.23462 9.51125 16.91475 9.02925 16.27488L6.90523 13.45525C6.57885 13.022 6.58824 12.42384 6.92804 12.00091C7.37213 11.44825 8.20015 11.40259 8.70284 11.90309L9.77775 13.04363V6.17646C9.77775 5.52672 10.30009 5 10.94442 5C11.58875 5 12.11109 5.52672 12.11109 6.17646V8.50875M16.21213 10.614C16.21213 9.83891 15.579 9.2105 14.798 9.2105H14.09088V9.91225M16.21213 10.614V11.31584M12.11109 8.50875H12.67675C13.45775 8.50875 14.09088 9.13716 14.09088 9.91225M12.11109 8.50875V10.614M14.09088 9.91225V10.614"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path
+                  d="M18.33338 6.67511C18.30337 4.60531 18.15012 3.43186 17.36388 2.64463C16.38713 1.66667 14.81513 1.66667 11.671 1.66667H8.33625C5.19217 1.66667 3.62014 1.66667 2.6434 2.64463C1.66667 3.62259 1.66667 5.19659 1.66667 8.34459V10.01409C1.66667 11.56984 1.66667 12.34768 1.92051 12.96138C2.25897 13.77937 2.90817 14.42938 3.72529 14.76838C4.06499 14.90925 4.4551 14.972 5 15"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+              </svg>
+            </span>
+            <span class="btn-primary-text">Schedule a Demo</span>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Partial -->
+  <div id="footer-placeholder"></div>
+
+  <script>
+    fetch('/partials/footer.html')
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        document.getElementById('footer-placeholder').innerHTML = html;
+      });
+  </script>
+
+  <script src="/insights/blog.js?v=1"></script>
+  <script>
+    // Category comes from the URL: /insights/category/<slug>/ (served by a
+    // rewrite in vercel.json). ?c=<slug> also works, for local previews.
+    function getCurrentCategory() {
+      const match = window.location.pathname.match(/\/insights\/category\/([^/]+)/);
+      const slug = match ? match[1] : new URLSearchParams(window.location.search).get('c');
+      return getCategoryFromSlug((slug || '').toLowerCase());
+    }
+
+    const currentCategory = getCurrentCategory();
+
+    function renderHeading() {
+      const titleEl = document.getElementById('categoryTitle');
+      const descEl = document.getElementById('categoryDescription');
+      if (!currentCategory) {
+        titleEl.textContent = 'Category not found';
+        descEl.textContent = 'This section doesn\u2019t exist or may have moved.';
+        document.title = 'Not Found | EVERYAISLE';
+        return;
+      }
+      const name = getCategoryName(currentCategory);
+      titleEl.textContent = name;
+      descEl.textContent = CATEGORY_DESCRIPTIONS[currentCategory] || '';
+      document.title = `${name} | EVERYAISLE`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) metaDesc.setAttribute('content', CATEGORY_DESCRIPTIONS[currentCategory] || '');
+    }
+
+    async function loadCategoryPosts() {
+      const loadingEl = document.getElementById('blogLoading');
+      const errorEl = document.getElementById('blogError');
+      const emptyEl = document.getElementById('blogEmpty');
+      const gridEl = document.getElementById('categoryGrid');
+
+      errorEl.style.display = 'none';
+      emptyEl.style.display = 'none';
+      gridEl.innerHTML = '';
+
+      if (!currentCategory) {
+        loadingEl.style.display = 'none';
+        emptyEl.querySelector('h3').textContent = 'Nothing here';
+        emptyEl.querySelector('p').textContent = 'Head back to see all of our news and resources.';
+        emptyEl.style.display = 'flex';
+        return;
+      }
+
+      loadingEl.style.display = 'flex';
+      try {
+        const posts = (await fetchPosts()).filter(post => post.category === currentCategory);
+        loadingEl.style.display = 'none';
+        if (posts.length === 0) {
+          emptyEl.style.display = 'flex';
+          return;
+        }
+        gridEl.innerHTML = posts.map(post => createPostCard(post)).join('');
+        animateCards();
+      } catch (error) {
+        console.error('Error loading blog posts:', error);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'flex';
+      }
+    }
+
+    renderHeading();
+    document.addEventListener('DOMContentLoaded', loadCategoryPosts);
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+
+    const revealOnScroll = () => {
+      reveals.forEach(element => {
+        if (element.getBoundingClientRect().top < window.innerHeight - 100) {
+          element.classList.add('visible');
+        }
+      });
+    };
+
+    window.addEventListener('scroll', revealOnScroll);
+    window.addEventListener('load', revealOnScroll);
+  </script>
+</body>
+
+</html>

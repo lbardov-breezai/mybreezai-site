@@ -17,6 +17,8 @@
   ],
   "rewrites": [
     { "source": "/insights/post/:slug", "destination": "/insights/post/index.html" },
-    { "source": "/insights/post/:slug/", "destination": "/insights/post/index.html" }
+    { "source": "/insights/post/:slug/", "destination": "/insights/post/index.html" },
+    { "source": "/insights/category/:slug", "destination": "/insights/category/index.html" },
+    { "source": "/insights/category/:slug/", "destination": "/insights/category/index.html" }
   ]
 }
