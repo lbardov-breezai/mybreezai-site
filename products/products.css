@@ -3115,3 +3115,21 @@
     .pf-loop, .pf-phone { animation: none; }
     .pf-browser { transition: none; }
 }
+
+/* ─── Product demo video (below the browser visual) ───────────────────────── */
+.pf-demo {
+    width: min(100%, 960px);
+    margin: 56px auto 0;
+}
+.pf-demo-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 16px;
+    background: #000;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 24px 60px -24px rgba(0, 0, 0, 0.35);
+}
+@media (max-width: 860px) {
+    .pf-demo { margin-top: 32px; }
+    .pf-demo-video { border-radius: 12px; }
+}
