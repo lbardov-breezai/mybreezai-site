@@ -481,7 +481,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--gold-500);
+    color: var(--teal-500);
 }
 
 /* ============ CORE FEATURES SECTION ============ */
@@ -1759,8 +1759,8 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    max-width: 760px; /* same width as the partner note below */
-    margin: 0 auto 1.5rem; /* bottom gap matches the column gap */
+    max-width: 760px;
+    margin: 0 auto;
 }
 
 .groceryaisle-success-card {
@@ -1803,40 +1803,6 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.65;
-}
-
-/* AWG partner note */
-.groceryaisle-success-partner-note {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    background: linear-gradient(135deg,
-            #146bb325 0%,
-            #f2f2f2 100%);
-    border-radius: 20px;
-    padding: 2rem 2.5rem;
-    max-width: 760px;
-    margin: 0 auto;
-}
-
-.groceryaisle-success-partner-logo-row {
-    flex-shrink: 0;
-}
-
-.groceryaisle-success-partner-logo-row img {
-    max-width: 120px;
-    height: auto;
-    display: block;
-}
-
-.groceryaisle-success-partner-note p {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.65;
-}
-
-.groceryaisle-success-partner-note strong {
-    color: var(--text-primary);
 }
 
 /* ============ WHITE-LABEL SHOWCASE ============ */
@@ -2405,13 +2371,6 @@
     .groceryaisle-success-cards {
         grid-template-columns: 1fr;
         gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .groceryaisle-success-partner-note {
-        flex-direction: column;
-        text-align: center;
-        gap: 1.25rem;
     }
 }
 
@@ -2533,14 +2492,6 @@
 
     .groceryaisle-success-card-stat {
         font-size: 2rem;
-    }
-
-    .groceryaisle-success-partner-note {
-        padding: 1.25rem 1rem;
-    }
-
-    .groceryaisle-success-partner-logo-row img {
-        max-width: 80px;
     }
 
     .groceryaisle-roadmap-phase {
